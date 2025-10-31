@@ -1,0 +1,204 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>XML Security Library</title>
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body><table width="100%" valign="top"><tr valign="top">
+<td valign="top" align="left" width="210">
+<img src="images/logo.gif" alt="XML Security Library" border="0"><p></p>
+<ul>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<ul><li><a href="https://github.com/lsh123/xmlsec">GitHub</a></li></ul>
+<li><a href="news.html">News</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<ul>
+<li><a href="faq.html">FAQ</a></li>
+<li><a href="api/xmlsec-notes.html">Tutorial</a></li>
+<li><a href="api/xmlsec-reference.html">API reference</a></li>
+<li><a href="api/xmlsec-examples.html">Examples</a></li>
+</ul>
+<li><a href="xmldsig.html">XML Digital Signature</a></li>
+<li><a href="xmlenc.html">XML Encryption</a></li>
+<li><a href="c14n.html">XML Canonicalization</a></li>
+<li><a href="bugs.html">Reporting Bugs</a></li>
+<li><a href="mailing-list.html">Mailing list</a></li>
+<li><a href="related.html">Related</a></li>
+<li><a href="authors.html">Authors</a></li>
+</ul>
+<table width="100%">
+<tr>
+<td width="15"></td>
+<td><a href="http://xmlsoft.org/"><img src="images/libxml2-logo.png" alt="LibXML2" border="0"></a></td>
+</tr>
+<tr>
+<td width="15"></td>
+<td><a href="http://xmlsoft.org/XSLT"><img src="images/libxslt-logo.png" alt="LibXSLT" border="0"></a></td>
+</tr>
+<tr>
+<td width="15"></td>
+<td><a href="http://www.openssl.org/"><img src="images/openssl-logo.png" alt="OpenSSL" border="0"></a></td>
+</tr>
+<!--Links - start--><!--Links - end-->
+</table>
+</td>
+<td valign="top"><table width="80%" valign="top" style="margin-left:10px;"><tr><td valign="top" align="left" id="xmlsecContent">
+<div align="center">
+<h1>XML Security Library</h1>
+</div>
+<p>
+XML Security Library is a C library based on <a href="http://xmlsoft.org/">LibXML2</a>.
+The library  supports major XML security standards:
+</p>
+<ul>
+<li><a href="xmldsig.html">XML Signature</a></li>
+<li><a href="xmlenc.html">XML Encryption</a></li>
+<li>
+<a href="http://www.w3.org/TR/xml-c14n">Canonical XML</a> (part of the
+<a href="http://xmlsoft.org">LibXML2</a>)</li>
+<li>
+<a href="http://www.w3.org/TR/xml-exc-c14n">Exclusive Canonical XML</a>
+(part of the <a href="http://xmlsoft.org">LibXML2</a>)</li>
+</ul>
+<p>
+XML Security Library is released under the
+<a href="http://www.opensource.org/licenses/mit-license.html">MIT  Licence</a>
+see the Copyright file in the distribution  for details.<br><br></p>
+<p><b>News</b></p>
+<ul>
+    <li>TODO<br>
+		The <a href="download.html">XML Security Library 1.3.9</a> release includes the following changes:
+        <ul>
+            <li>TODO</li>
+            <li>Several other small fixes (see <a href="https://github.com/lsh123/xmlsec/commits/master">more details</a>).</li>
+        </ul>
+	</li>
+	<br>
+
+    <li>October 15, 2025<br>
+		The <a href="download.html">XML Security Library 1.3.8</a> release includes the following changes:
+        <ul>
+            <li>(xmlsec-openssl) Deprecated support for OpenSSL 1.1.1 (<a href="https://openssl-corporation.org/post/2023-09-11-eol-111/">reached its End of Life in September, 2023</a>)</li>
+            <li>(xmlsec-openssl) Added AWS-LC support</li>
+            <li>(xmlsec-openssl, xmlsec-gnutls, xmlsec-mscng) Added support for longer than expected DSA and ECDSA sigantures to support broken Java implementations.</li>
+            <li>(xmlsec command line tool) Added option "--add-id-attr" to add ID attributes by name to all nodes in the document.</li>
+            <li>(xmlsec-core) Added RSA MGF1 and digest template API</li>
+            <li>(xmlsec-core) Added example of signing / verifying signature by ID attribute.</li>
+            <li>Several other small fixes (see <a href="https://github.com/lsh123/xmlsec/commits/master">more details</a>).</li>
+        </ul>
+	</li>
+	<br>
+
+    <li>
+        June 16, 2025<br>
+        The legacy <a href="download.html">XML Security Library 1.2.42</a> release includes the following changes:
+        <ul>
+            <li>(xmlsec-openssl) Ensured that only certificates from XML file are returned after verification.</li>
+            <li>(xmlsec-core) Fixed includes to support latest LibXML2 / LibXSLT.</li>
+            <li>Several other small fixes (see <a href="https://github.com/lsh123/xmlsec/commits/xmlsec-1_2_x">more details</a>).</li>
+        </ul>
+    </li>
+    <br>
+
+    <li>February 11, 2025<br>
+		The <a href="download.html">XML Security Library 1.3.7</a> release includes the following changes:
+        <ul>
+            <li>(xmlsec-core) Added XMLSEC_TRANSFORM_FLAGS_USER_SPECIFIED flag to the xmlSecTransform to differentiate transforms specified in the input XML file vs transforms automatically added by XMLSec library.</li>
+            <li>(xmlsec-core) Added signature result verification to the examples to demonstrate the need to ensure the correct data is actually signed.</li>
+            <li>(xmlsec-core) Disabled old crypto algorithms (MD5, RIPEMD160) and the old crypto engines (MSCrypto, GCrypt) by default (use "--with-legacy-features" option to reenable everything).</li>
+            <li>(xmlsec-openssl) Fixed excess padding in ECDSA signature generation.</li>
+            <li>(xmlsec-openssl) Fixed build warnings for BoringSSL / AWS-LC.</li>
+            <li>(xmlsec-nss) Fixed certificates search in NSS DB.</li>
+            <li>(xmlsec-openssl, xmlsec-gnutls, xmlsec-mscng) Added an option to skip timestamp checks for certificates and CLRs.</li>
+            <li>(xmlsec-windows) Disabled old crypto algorithms (MD5, RIPEMD160), made "mscng" the default crypto engine on Windows, and added support for "legacy-features" flag for "configure.js".</li>
+            <li>Several other small fixes (see <a href="https://github.com/lsh123/xmlsec/commits/master">more details</a>).</li>
+        </ul>
+	</li>
+	<br>
+
+    <li>October 22, 2024<br>
+		The <a href="download.html">XML Security Library 1.3.6</a> release includes the following changes:
+        <ul>
+            <li>(xmlsec-openssl) Fixed build if OpenSSL 3.0 doesn't have engines support enabled.</li>
+            <li>(xmlsec-mscng, xmlsec-mscrypto) Added support for multiple trusted certs with the same subject.</li>
+            <li>(windows) Disabled iconv support by default (use 'iconv=yes' option for 'configure.js' to re-enable it).</li>
+            <li>Several other small fixes (see <a href="https://github.com/lsh123/xmlsec/commits/master">more details</a>).</li>
+        </ul>
+	</li>
+	<br>
+
+    <li>July 19, 2024<br>
+		The <a href="download.html">XML Security Library 1.3.5 and legacy 1.2.41</a> releases include the following changes:
+        <ul>
+            <li>(xmlsec-mscng,xmlsec-mscrypto) Improved certificates verification.</li>
+            <li>(xmlsec-gnutls) Added support for self-signed certificates.</li>
+            <li>(xmlsec-core) Fix deprecated functions in LibXML2 2.13.1 including disabling HTTP support
+                by default (use ''--enable-http' option to re-enable it).</li>
+            <li>Several other small fixes (see <a href="https://github.com/lsh123/xmlsec/commits/xmlsec-1_2_x">more details</a>).</li>
+        </ul>
+	</li>
+	<br>
+
+    <li>July 11, 2024<br>
+        The legacy <a href="https://www.aleksey.com/xmlsec/download/xmlsec1-1.2.40.tar.gz">XML Security Library 1.2.40</a> release includes the following changes:
+        <ul>
+           <li>(xmlsec-core) Fixed functions deprecated in LibXML2 2.13.1 (including disabling HTTP support by default).</li>
+           <li>(xmlsec-nss) Increased keys size in all tests to support NSS 3.101.</li>
+           <li>(windows) Added "ftp" and "http" flags in 'configure.js' (both are disabled by default).</li>
+           <li>Several other small fixes (<a href="https://github.com/lsh123/xmlsec/commits/xmlsec-1_2_x">more details</a>).</li>
+        </ul>
+    </li>
+    <br>
+
+    <li>April 9, 2024<br>
+		The <a href="download.html">XML Security Library 1.3.4</a> release includes the following changes:
+		<br>
+		<br>
+        <ul>
+            <li>(xmlsec-openssl) Support cert dates before unix epoch start.</li>
+            <li>(xmlsec-openssl) Fix build for LibreSSL or BoringSSL.</li>
+            <li>(xmlsec-nss) Ensure NSS algorithms are initialized.</li>
+            <li>Several other small fixes (see <a href="https://github.com/lsh123/xmlsec/commits/master">more details</a>).</li>
+        </ul>
+	</li>
+	<br>
+
+    <li>January 4, 2024<br>
+		The <a href="download.html">XML Security Library 1.3.3</a> release includes the following changes:
+		<br>
+		<br>
+        <ul>
+            <li>
+                (xmlsec-core) Disabled KeyValue and DEREncodedKeyValue  XML nodes by default. Use the '--enabled-key-data' option
+                for the xmlsec command line utility or update the 'keyInfoCtx.enabledKeyData' parameter if you need to re-enable these nodes
+                (also see <a href="faq.html#section_3_5">question 3.5 in the FAQ</a>).
+            </li>
+            <li>(xmlsec-core) Removed '--enable-size-t' ('size_t' for MSVC builds) option and made 'xmlSecSize' to always be the same as 'size_t'.</li>
+            <li>(xmlsec-core) Removed previously deprecated functions, defines, etc.</li>
+            <li>(xmlsec-core) Fixed build for libxml2 v2.12.0.</li>
+            <li>
+                (xmlsec-openssl) Removed support for OpenSSL 1.1.0 (<a href="https://endoflife.date/openssl">end of life in Aug 2016</a>).
+                The minimum OpenSSL supported version is 1.1.1; the version 3.0.0 or greater is recommended.
+            </li>
+            <li>(xmlsec-nss) Added runtime check for the enabled algorithms in NSS.</li>
+            <li>(xmlsec-mscrypto) Removed NT4 support.</li>
+            <li>Several other small fixes (see <a href="https://github.com/lsh123/xmlsec/commits/master">more details</a>).</li>
+        </ul>
+	</li>
+	<br>
+
+    <li>December 12, 2023<br>
+    The legacy <a href="download/">XML Security Library 1.2.39</a> release includes the following changes:
+    <ul>
+            <li>Added options to enable/disable local files, HTTP, and FTP support. FTP is disabled by default.</li>
+            <li>Several other small fixes (<a href="https://github.com/lsh123/xmlsec/commits/xmlsec-1_2_x">more details</a>).</li>
+    </ul>
+    </li>
+    <br>
+
+</ul>
+<br><br><a href="news.html">News page</a>
+</td></tr></table></td>
+</tr></table></body>
+</html>

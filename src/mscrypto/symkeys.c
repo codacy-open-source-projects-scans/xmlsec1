@@ -137,7 +137,7 @@ xmlSecMSCryptoSymKeyDataBinWrite(xmlSecKeyDataId id, xmlSecKeyPtr key,
 }
 
 static int
-xmlSecMSCryptoSymKeyDataGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type ATTRIBUTE_UNUSED) {
+xmlSecMSCryptoSymKeyDataGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type XMLSEC_ATTRIBUTE_UNUSED) {
     xmlSecBufferPtr buffer;
 
     xmlSecAssert2(xmlSecMSCryptoSymKeyDataCheckId(data), -1);
@@ -552,7 +552,7 @@ static xmlSecKeyDataKlass xmlSecMSCryptoKeyDataAesKlass = {
     /* get info */
     xmlSecMSCryptoSymKeyDataGetType,            /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecMSCryptoSymKeyDataGetSize,            /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                                       /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                                       /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecMSCryptoSymKeyDataXmlRead,            /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -633,7 +633,7 @@ static xmlSecKeyDataKlass xmlSecMSCryptoKeyDataDesKlass = {
     /* get info */
     xmlSecMSCryptoSymKeyDataGetType,            /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecMSCryptoSymKeyDataGetSize,            /* xmlSecKeyDataGetSizeMethod getSize; */
-        NULL,                                   /* xmlSecKeyDataGetIdentifier getIdentifier; */
+        NULL,                                   /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecMSCryptoSymKeyDataXmlRead,            /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -690,7 +690,7 @@ static xmlSecKeyDataKlass xmlSecMSCryptoKeyDataHmacKlass = {
     /* get info */
     xmlSecMSCryptoSymKeyDataGetType,            /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecMSCryptoSymKeyDataGetSize,            /* xmlSecKeyDataGetSizeMethod getSize; */
-        NULL,                                   /* xmlSecKeyDataGetIdentifier getIdentifier; */
+        NULL,                                   /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecMSCryptoSymKeyDataXmlRead,            /* xmlSecKeyDataXmlReadMethod xmlRead; */

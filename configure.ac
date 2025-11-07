@@ -1,10 +1,10 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([xmlsec1],[1.3.7],[http://www.aleksey.com/xmlsec])
+AC_INIT([xmlsec1],[1.3.9],[http://www.aleksey.com/xmlsec])
 
 XMLSEC_PACKAGE=xmlsec1
 XMLSEC_VERSION_MAJOR=1
 XMLSEC_VERSION_MINOR=3
-XMLSEC_VERSION_SUBMINOR=7
+XMLSEC_VERSION_SUBMINOR=9
 XMLSEC_VERSION="$XMLSEC_VERSION_MAJOR.$XMLSEC_VERSION_MINOR.$XMLSEC_VERSION_SUBMINOR"
 XMLSEC_VERSION_INFO=`echo $XMLSEC_VERSION | awk -F. '{ printf "%d:%d:%d", $1+$2, $3, $2 }'`
 XMLSEC_VERSION_SAFE=`echo $XMLSEC_VERSION | sed 's/\./_/g'`
@@ -825,6 +825,26 @@ if test "z$OPENSSL_FOUND" = "zyes" ; then
             #include <openssl/opensslv.h>
             #include <openssl/crypto.h>
             #if OPENSSL_VERSION_NUMBER >= 0x10100010L
+            #ifdef OPENSSL_IS_AWSLC
+            greater-than-minvers
+            #endif
+            #endif
+        ],[
+            OPENSSL_VERSION="AWSLC >= 1.1.1"
+            enable_ripemd160=no
+            enable_dsa=no
+            enable_dh=no
+            enable_sha3=no
+        ],[
+            OPENSSL_VERSION=""
+        ])
+    fi
+
+    if test "z$OPENSSL_VERSION" = "z" ; then
+        AC_EGREP_CPP(greater-than-minvers, [
+            #include <openssl/opensslv.h>
+            #include <openssl/crypto.h>
+            #if OPENSSL_VERSION_NUMBER >= 0x10100010L
             #ifdef OPENSSL_IS_BORINGSSL
             greater-than-minvers
             #endif
@@ -876,7 +896,11 @@ if test "z$OPENSSL_FOUND" = "zyes" ; then
     fi
 fi
 if test "z$OPENSSL_FOUND" = "zyes" ; then
-    AC_MSG_RESULT([yes (openssl version '$OPENSSL_VERSION')])
+    if test "z$OPENSSL_VERSION" = "z1.1.1" ; then
+        AC_MSG_RESULT([yes (openssl version '$OPENSSL_VERSION' --- DEPRECATED)])
+    else
+        AC_MSG_RESULT([yes (openssl version '$OPENSSL_VERSION')])
+    fi
 else
     AC_MSG_RESULT([$OPENSSL_FOUND])
 fi

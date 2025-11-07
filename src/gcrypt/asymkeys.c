@@ -563,7 +563,8 @@ done:
  * ============================================================================
  *
  * To support reading/writing private keys an X element added (before Y).
- * todo: The current implementation does not support Seed and PgenCounter!
+ *
+ * The current implementation does not support Seed and PgenCounter!
  * by this the P, Q and G are *required*!
  *
  *************************************************************************/
@@ -618,7 +619,7 @@ static xmlSecKeyDataKlass xmlSecGCryptKeyDataDsaKlass = {
     /* get info */
     xmlSecGCryptKeyDataDsaGetType,             /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecGCryptKeyDataDsaGetSize,             /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                                       /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                                       /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecGCryptKeyDataDsaXmlRead,             /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -734,7 +735,7 @@ xmlSecGCryptKeyDataDsaFinalize(xmlSecKeyDataPtr data) {
 }
 
 static int
-xmlSecGCryptKeyDataDsaGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type ATTRIBUTE_UNUSED) {
+xmlSecGCryptKeyDataDsaGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type XMLSEC_ATTRIBUTE_UNUSED) {
     xmlSecAssert2(xmlSecKeyDataCheckId(data, xmlSecGCryptKeyDataDsaId), -1);
     xmlSecAssert2(sizeBits > 0, -1);
 
@@ -861,8 +862,6 @@ xmlSecGCryptKeyDataDsaRead(xmlSecKeyDataId id, xmlSecKeyValueDsaPtr dsaValue) {
             xmlSecKeyDataKlassGetName(id));
         goto done;
     }
-
-    /* todo: add support for J , seed, pgencounter */
 
     /* Convert from OpenSSL parameter ordering to the OpenPGP order. */
     /* First check that x < y; if not swap x and y  */
@@ -1132,7 +1131,7 @@ static xmlSecKeyDataKlass xmlSecGCryptKeyDataRsaKlass = {
     /* get info */
     xmlSecGCryptKeyDataRsaGetType,             /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecGCryptKeyDataRsaGetSize,             /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                                       /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                                       /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecGCryptKeyDataRsaXmlRead,             /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -1248,7 +1247,7 @@ xmlSecGCryptKeyDataRsaFinalize(xmlSecKeyDataPtr data) {
 }
 
 static int
-xmlSecGCryptKeyDataRsaGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type ATTRIBUTE_UNUSED) {
+xmlSecGCryptKeyDataRsaGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type XMLSEC_ATTRIBUTE_UNUSED) {
     xmlSecAssert2(xmlSecKeyDataCheckId(data, xmlSecGCryptKeyDataRsaId), -1);
     xmlSecAssert2(sizeBits > 0, -1);
 
@@ -1551,7 +1550,7 @@ static xmlSecKeyDataKlass xmlSecGCryptKeyDataEcKlass = {
     /* get info */
     xmlSecGCryptKeyDataEcGetType,               /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecGCryptKeyDataEcGetSize,               /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                                       /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                                       /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecGCryptKeyDataEcXmlRead,               /* xmlSecKeyDataXmlReadMethod xmlRead; */

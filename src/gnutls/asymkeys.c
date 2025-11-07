@@ -508,7 +508,7 @@ static xmlSecKeyDataKlass xmlSecGnuTLSKeyDataDEREncodedKeyValueKlass = {
     /* get info */
     NULL,                                       /* xmlSecKeyDataGetTypeMethod getType; */
     NULL,                                       /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                                       /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                                       /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecGnuTLSKeyDataDEREncodedKeyValueXmlRead,     /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -757,7 +757,7 @@ static xmlSecKeyDataKlass xmlSecGnuTLSKeyDataDsaKlass = {
     /* get info */
     xmlSecGnuTLSKeyDataDsaGetType,              /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecGnuTLSKeyDataDsaGetSize,              /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                                       /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                                       /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecGnuTLSKeyDataDsaXmlRead,             /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -882,7 +882,7 @@ xmlSecGnuTLSKeyDataDsaDuplicate(xmlSecKeyDataPtr dst, xmlSecKeyDataPtr src) {
 }
 
 static int
-xmlSecGnuTLSKeyDataDsaGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type ATTRIBUTE_UNUSED) {
+xmlSecGnuTLSKeyDataDsaGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type XMLSEC_ATTRIBUTE_UNUSED) {
     xmlSecAssert2(xmlSecKeyDataCheckId(data, xmlSecGnuTLSKeyDataDsaId), -1);
     xmlSecAssert2(sizeBits > 0, -1);
 
@@ -1281,7 +1281,7 @@ static xmlSecKeyDataKlass xmlSecGnuTLSKeyDataEcKlass = {
     /* get info */
     xmlSecGnuTLSKeyDataEcGetType,               /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecGnuTLSKeyDataEcGetSize,               /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                                       /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                                       /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecGnuTLSKeyDataEcXmlRead,               /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -1750,7 +1750,7 @@ static xmlSecKeyDataKlass xmlSecGnuTLSKeyDataRsaKlass = {
     /* get info */
     xmlSecGnuTLSKeyDataRsaGetType,              /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecGnuTLSKeyDataRsaGetSize,              /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                                       /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                                       /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecGnuTLSKeyDataRsaXmlRead,              /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -1875,7 +1875,7 @@ xmlSecGnuTLSKeyDataRsaDuplicate(xmlSecKeyDataPtr dst, xmlSecKeyDataPtr src) {
 }
 
 static int
-xmlSecGnuTLSKeyDataRsaGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type ATTRIBUTE_UNUSED) {
+xmlSecGnuTLSKeyDataRsaGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type XMLSEC_ATTRIBUTE_UNUSED) {
     xmlSecAssert2(xmlSecKeyDataCheckId(data, xmlSecGnuTLSKeyDataRsaId), -1);
     xmlSecAssert2(sizeBits > 0, -1);
 
@@ -2299,7 +2299,7 @@ static xmlSecKeyDataKlass xmlSecGnuTLSKeyDataGost2001Klass = {
     /* get info */
     xmlSecGnuTLSKeyDataGost2001GetType,         /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecGnuTLSKeyDataGost2001GetSize,         /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                                       /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                                       /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     NULL,                                       /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -2470,7 +2470,7 @@ static xmlSecKeyDataKlass xmlSecGnuTLSKeyDataGost2012_256Klass = {
     /* get info */
     xmlSecGnuTLSKeyDataGost2012_256GetType,     /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecGnuTLSKeyDataGost2012_256GetSize,     /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                                       /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                                       /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     NULL,                                       /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -2636,7 +2636,7 @@ static xmlSecKeyDataKlass xmlSecGnuTLSKeyDataGost2012_512Klass = {
     /* get info */
     xmlSecGnuTLSKeyDataGost2012_512GetType,     /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecGnuTLSKeyDataGost2012_512GetSize,     /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                                       /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                                       /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     NULL,                                       /* xmlSecKeyDataXmlReadMethod xmlRead; */

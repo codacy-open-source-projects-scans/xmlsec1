@@ -24,6 +24,7 @@
 #include <libxml/valid.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
+#include <libxml/xmlversion.h>
 
 #include <xmlsec/xmlsec.h>
 #include <xmlsec/xmltree.h>
@@ -87,8 +88,8 @@ xmlSecGetNodeContentAndTrim(const xmlNodePtr cur) {
     while(((*bb) != '\0') && isspace(*bb)) { ++bb; }
 
     /* rtrim */
-    ee = bb + xmlStrlen(bb);
-    while((ee != bb) && isspace(*(--ee))) { }
+    ee = bb + xmlStrlen(bb) - 1;
+    while((bb <= ee) && isspace(*ee)) { --ee; }
     *(ee + 1) = '\0';
 
     /* move string to the beggining */
@@ -117,7 +118,7 @@ xmlSecGetNodeContentAsSize(const xmlNodePtr cur, xmlSecSize defValue, xmlSecSize
     xmlSecAssert2(cur != NULL, -1);
     xmlSecAssert2(res != NULL, -1);
 
-    content = xmlNodeGetContent(cur);
+    content = xmlSecGetNodeContentAndTrim(cur);
     if(content == NULL) {
         (*res) = defValue;
         return(0);
@@ -705,7 +706,11 @@ int
 xmlSecReplaceNodeBufferAndReturn(xmlNodePtr node, const xmlSecByte *buffer, xmlSecSize size, xmlNodePtr *replaced) {
     xmlNodePtr results = NULL;
     xmlNodePtr next = NULL;
+#if (LIBXML_VERSION >= 21500)
+    xmlChar *oldenc;
+#else  /* (LIBXML_VERSION >= 21500) */
     const xmlChar *oldenc;
+#endif /* (LIBXML_VERSION >= 21500) */
     int len;
     xmlParserErrors ret;
 
@@ -1207,13 +1212,12 @@ xmlSecQName2IntegerNodeRead(xmlSecQName2IntegerInfoConstPtr info, xmlNodePtr nod
     xmlSecAssert2(node != NULL, -1);
     xmlSecAssert2(intValue != NULL, -1);
 
-    content = xmlNodeGetContent(node);
+    content = xmlSecGetNodeContentAndTrim(node);
     if(content == NULL) {
-        xmlSecXmlError2("xmlNodeGetContent", NULL,
+        xmlSecInternalError2("xmlSecGetNodeContentAndTrim", NULL,
                         "node=%s", xmlSecErrorsSafeString(node->name));
         return(-1);
     }
-    /* todo: trim content? */
 
     ret = xmlSecQName2IntegerGetIntegerFromString(info, node, content, intValue);
     if(ret < 0) {
@@ -1301,8 +1305,7 @@ xmlSecQName2IntegerAttributeRead(xmlSecQName2IntegerInfoConstPtr info, xmlNodePt
 
     attrValue = xmlGetProp(node, attrName);
     if(attrValue == NULL) {
-        xmlSecXmlError2("xmlGetProp", NULL,
-                        "node=%s", xmlSecErrorsSafeString(node->name));
+        xmlSecXmlError2("xmlGetProp", NULL, "node=%s", xmlSecErrorsSafeString(node->name));
         return(-1);
     }
     /* todo: trim value? */
@@ -1624,9 +1627,9 @@ xmlSecQName2BitMaskNodesRead(xmlSecQName2BitMaskInfoConstPtr info, xmlNodePtr* n
     (*mask) = 0;
     cur = (*node);
     while((cur != NULL) && (xmlSecCheckNodeName(cur, nodeName, nodeNs))) {
-        content = xmlNodeGetContent(cur);
+        content = xmlSecGetNodeContentAndTrim(cur);
         if(content == NULL) {
-            xmlSecXmlError2("xmlNodeGetContent", NULL,
+            xmlSecInternalError2("xmlSecGetNodeContentAndTrim", NULL,
                             "node=%s", xmlSecErrorsSafeString(cur->name));
             return(-1);
         }

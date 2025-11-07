@@ -14,16 +14,15 @@ After 5 years, the support MIGHT be provided on case-by-case basis.
 | xmlsec-nss        | >= 1.3.0  | April 12, 2023     | :white_check_mark:    | :white_check_mark:  |
 | xmlsec-gnutls     | >= 1.3.0  | April 12, 2023     | :white_check_mark:    | :white_check_mark:  |
 | xmlsec-mscng      | >= 1.3.0  | April 12, 2023     | :white_check_mark:    | :white_check_mark:  |
-| xmlsec-gcrypt     | >= 1.3.0  | April 12, 2023     | :x: (mainanance mode) | :white_check_mark:  |
-| xmlsec-mscrypto   | >= 1.3.0  | April 12, 2023     | :x: (mainanance mode) | :white_check_mark:  |
+| xmlsec-gcrypt     | >= 1.3.0  | April 12, 2023     | :x:                   | :white_check_mark:  |
+| xmlsec-mscrypto   | >= 1.3.0  | April 12, 2023     | :x:                   | :white_check_mark:  |
 
-### 1.2.x (mainanance mode)
-
+### 1.2.x (mainanance mode from April 2023, planned End-Of-Life in April 2028)
 
 | Component/Version | Version   | Release date       | Full Support          | Security Support    |
 | ------------------|-----------| -------------------|-----------------------|---------------------|
-| all               | >= 1.2.29 | October 15, 2019   | :x: (mainanance mode) | :white_check_mark:  |
-| all               | <= 1.2.28 | April 16, 2019     | :x: (not supported)   | :x: (not supported) |
+| all               | >= 1.2.38 | July 5, 2023       | :x:                   | :white_check_mark:  |
+| all               | < 1.2.38  | October 15, 2019   | :x:                   | :x:                 |
 
 ## Reporting a Vulnerability
 

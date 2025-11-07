@@ -34,7 +34,6 @@
 #include <xmlsec/openssl/crypto.h>
 #include <xmlsec/openssl/evp.h>
 #include <xmlsec/openssl/x509.h>
-#include "openssl_compat.h"
 
 #include <openssl/evp.h>
 #include <openssl/x509.h>
@@ -42,14 +41,9 @@
 #include <openssl/x509v3.h>
 
 #include "../cast_helpers.h"
+#include "../x509_helpers.h"
 #include "openssl_compat.h"
 #include "private.h"
-
-#ifdef OPENSSL_IS_BORINGSSL
-typedef size_t x509_size_t;
-#else /* OPENSSL_IS_BORINGSSL */
-typedef int x509_size_t;
-#endif /* OPENSSL_IS_BORINGSSL */
 
 /**************************************************************************
  *
@@ -100,13 +94,7 @@ static int              xmlSecOpenSSLX509VerifyCRL                      (X509_ST
 static X509*            xmlSecOpenSSLX509FindChildCert                  (STACK_OF(X509) *chain,
                                                                          X509 *cert);
 static X509_NAME*       xmlSecOpenSSLX509NameRead                       (const xmlChar *str);
-static int              xmlSecOpenSSLX509NameStringRead                 (const xmlChar **in,
-                                                                         xmlSecSize *inSize,
-                                                                         xmlSecByte *out,
-                                                                         xmlSecSize outSize,
-                                                                         xmlSecSize *outWritten,
-                                                                         xmlSecByte delim,
-                                                                         int ingoreTrailingSpaces);
+
 static int              xmlSecOpenSSLX509NamesCompare                   (X509_NAME *a,
                                                                          X509_NAME *b);
 static STACK_OF(X509_NAME_ENTRY)*  xmlSecOpenSSLX509_NAME_ENTRIES_copy  (X509_NAME *a);
@@ -188,11 +176,11 @@ xmlSecOpenSSLX509StoreFindCert_ex(xmlSecKeyDataStorePtr store,
     xmlChar *subjectName,
     xmlChar *issuerName, xmlChar *issuerSerial,
     xmlSecByte * ski, xmlSecSize skiSize,
-    xmlSecKeyInfoCtx* keyInfoCtx ATTRIBUTE_UNUSED
+    xmlSecKeyInfoCtx* keyInfoCtx XMLSEC_ATTRIBUTE_UNUSED
 ) {
     xmlSecOpenSSLX509StoreCtxPtr ctx;
     xmlSecOpenSSLX509FindCertCtx findCertCtx;
-    x509_size_t ii;
+    xmlSecOpenSSLSizeT ii;
     int ret;
     X509* res = NULL;
 
@@ -241,7 +229,7 @@ X509*
 xmlSecOpenSSLX509StoreFindCertByValue(xmlSecKeyDataStorePtr store, xmlSecKeyX509DataValuePtr x509Value) {
     xmlSecOpenSSLX509StoreCtxPtr ctx;
     xmlSecOpenSSLX509FindCertCtx findCertCtx;
-    x509_size_t ii;
+    xmlSecOpenSSLSizeT ii;
     int ret;
     X509* res = NULL;
 
@@ -344,7 +332,7 @@ xmlSecOpenSSLX509StoreVerifyAndCopyCrls(X509_STORE* xst, X509_STORE_CTX* xsc, ST
     xmlSecKeyInfoCtx* keyInfoCtx
 ) {
     STACK_OF(X509_CRL)* verified_crls = NULL;
-    x509_size_t ii, num;
+    xmlSecOpenSSLSizeT ii, num, num2;
     int ret;
 
     xmlSecAssert2(xst != NULL, NULL);
@@ -391,8 +379,8 @@ xmlSecOpenSSLX509StoreVerifyAndCopyCrls(X509_STORE* xst, X509_STORE_CTX* xsc, ST
         }
         /* dont duplicate or up_ref the crl since we own
          * pointer to it */
-        ret = sk_X509_CRL_push(verified_crls, crl);
-        if(ret <= 0) {
+        num2 = sk_X509_CRL_push(verified_crls, crl);
+        if(num2 <= 0) {
             xmlSecOpenSSLError("sk_X509_CRL_push", NULL);
             sk_X509_CRL_free(verified_crls);
             return(NULL);
@@ -408,7 +396,7 @@ xmlSecOpenSSLX509StoreVerifyCertAgainstRevoked(X509 * cert, STACK_OF(X509_REVOKE
     X509_REVOKED * revoked_cert;
     const ASN1_INTEGER * revoked_cert_serial;
     const ASN1_INTEGER * cert_serial;
-    x509_size_t ii, num;
+    xmlSecOpenSSLSizeT ii, num;
     int ret;
 
     xmlSecAssert2(cert != NULL, -1);
@@ -494,7 +482,7 @@ xmlSecOpenSSLX509StoreFindBestCrl(X509_NAME *cert_issuer, STACK_OF(X509_CRL) *cr
     X509_NAME *crl_issuer;
     const ASN1_TIME * lastUpdate;
     time_t resLastUpdateTime = 0;
-    x509_size_t ii, num;
+    xmlSecOpenSSLSizeT ii, num;
     int ret;
 
     xmlSecAssert2(cert_issuer != NULL, -1);
@@ -622,7 +610,7 @@ xmlSecOpenSSLX509StoreVerifyCertAgainstCrls(STACK_OF(X509_CRL) *crls, X509* cert
 static int
 xmlSecOpenSSLX509StoreVerifyCertsAgainstCrls(STACK_OF(X509)* chain, STACK_OF(X509_CRL)* crls, xmlSecKeyInfoCtx* keyInfoCtx) {
     X509 * cert;
-    x509_size_t ii, num_certs;
+    xmlSecOpenSSLSizeT ii, num_certs;
     int ret;
 
     xmlSecAssert2(chain != NULL, -1);
@@ -830,7 +818,7 @@ xmlSecOpenSSLX509StoreVerify(xmlSecKeyDataStorePtr store, XMLSEC_STACK_OF_X509* 
     X509 * res = NULL;
     X509 * cert;
     X509_STORE_CTX *xsc = NULL;
-    x509_size_t ii, num;
+    xmlSecOpenSSLSizeT ii, num;
     int ret;
 
     xmlSecAssert2(xmlSecKeyDataStoreCheckId(store, xmlSecOpenSSLX509StoreId), NULL);
@@ -848,7 +836,7 @@ xmlSecOpenSSLX509StoreVerify(xmlSecKeyDataStorePtr store, XMLSEC_STACK_OF_X509* 
         goto done;
     }
 
-    /* create a combined list of all untrusted certs*/
+    /* create a combined list of all untrusted certs (new list doesn't OWN certs)*/
     all_untrusted_certs = xmlSecOpenSSLX509StoreCombineCerts(certs, ctx->untrusted);
     if(all_untrusted_certs == NULL) {
         xmlSecInternalError("xmlSecOpenSSLX509StoreCombineCerts", NULL);
@@ -973,7 +961,7 @@ xmlSecOpenSSLX509StoreVerifyKey(xmlSecKeyDataStorePtr store, xmlSecKeyPtr key, x
         goto done;
     }
 
-    /* create a combined list of all untrusted certs*/
+    /* create a combined list of all untrusted certs (new list doesn't OWN certs) */
     all_untrusted_certs = xmlSecOpenSSLX509StoreCombineCerts(certs, ctx->untrusted);
     if(all_untrusted_certs == NULL) {
         xmlSecInternalError("xmlSecOpenSSLX509StoreCombineCerts", xmlSecKeyDataStoreGetName(store));
@@ -1025,7 +1013,6 @@ done:
 int
 xmlSecOpenSSLX509StoreAdoptCert(xmlSecKeyDataStorePtr store, X509* cert, xmlSecKeyDataType type) {
     xmlSecOpenSSLX509StoreCtxPtr ctx;
-    int ret;
 
     xmlSecAssert2(xmlSecKeyDataStoreCheckId(store, xmlSecOpenSSLX509StoreId), -1);
     xmlSecAssert2(cert != NULL, -1);
@@ -1034,6 +1021,8 @@ xmlSecOpenSSLX509StoreAdoptCert(xmlSecKeyDataStorePtr store, X509* cert, xmlSecK
     xmlSecAssert2(ctx != NULL, -1);
 
     if((type & xmlSecKeyDataTypeTrusted) != 0) {
+        int ret;
+
         xmlSecAssert2(ctx->xst != NULL, -1);
 
         ret = X509_STORE_add_cert(ctx->xst, cert);
@@ -1045,6 +1034,8 @@ xmlSecOpenSSLX509StoreAdoptCert(xmlSecKeyDataStorePtr store, X509* cert, xmlSecK
         /* add cert increments the reference */
         X509_free(cert);
     } else {
+        xmlSecOpenSSLSizeT ret;
+
         xmlSecAssert2(ctx->untrusted != NULL, -1);
 
         ret = sk_X509_push(ctx->untrusted, cert);
@@ -1068,7 +1059,7 @@ xmlSecOpenSSLX509StoreAdoptCert(xmlSecKeyDataStorePtr store, X509* cert, xmlSecK
 int
 xmlSecOpenSSLX509StoreAdoptCrl(xmlSecKeyDataStorePtr store, X509_CRL* crl) {
     xmlSecOpenSSLX509StoreCtxPtr ctx;
-    int ret;
+    xmlSecOpenSSLSizeT ret;
 
     xmlSecAssert2(xmlSecKeyDataStoreCheckId(store, xmlSecOpenSSLX509StoreId), -1);
     xmlSecAssert2(crl != NULL, -1);
@@ -1347,6 +1338,11 @@ done:
 
 #else /* XMLSEC_OPENSSL_NO_CRL_VERIFICATION */
     /* boringssl doesn't have X509_OBJECT_new() or public definition of X509_OBJECT */
+    UNREFERENCED_PARAMETER(xst);
+    UNREFERENCED_PARAMETER(xsc);
+    UNREFERENCED_PARAMETER(untrusted);
+    UNREFERENCED_PARAMETER(crl);
+    UNREFERENCED_PARAMETER(keyInfoCtx);
     return(1);
 #endif /* XMLSEC_OPENSSL_NO_CRL_VERIFICATION */
 }
@@ -1669,8 +1665,41 @@ xmlSecOpenSSLX509GetIssuerHash(X509* x) {
     return(res);
 }
 
+/* new list doesn't OWN certs */
 static STACK_OF(X509)*
 xmlSecOpenSSLX509StoreCombineCerts(STACK_OF(X509)* certs1, STACK_OF(X509)* certs2) {
+#if defined(XMLSEC_OPENSSL_API_300)
+    STACK_OF(X509)* res = NULL;
+    int ret;
+
+    res = sk_X509_new_null();
+    if (res == NULL) {
+        xmlSecOpenSSLError("sk_X509_new_null()", NULL);
+        return(NULL);
+    }
+
+    /* certs 1 */
+    ret = X509_add_certs(res, certs1, 0);
+    if (ret != 1) {
+        xmlSecOpenSSLError("X509_add_certs(certs1)", NULL);
+        sk_X509_free(res);
+        return(NULL);
+    }
+
+
+    /* certs 2 */
+    ret = X509_add_certs(res, certs2, 0);
+    if (ret != 1) {
+        xmlSecOpenSSLError("X509_add_certs(certs2)", NULL);
+        sk_X509_free(res);
+        return(NULL);
+    }
+
+    /* done
+    */
+    return (res);
+
+#else /* defined(XMLSEC_OPENSSL_API_300) */
     STACK_OF(X509)* res = NULL;
 
     /* certs1 */
@@ -1691,8 +1720,8 @@ xmlSecOpenSSLX509StoreCombineCerts(STACK_OF(X509)* certs1, STACK_OF(X509)* certs
         }
     } else if(certs2 != NULL) {
         X509 * cert;
-        x509_size_t ii, num;
-        int ret;
+        xmlSecOpenSSLSizeT ii, num;
+        xmlSecOpenSSLSizeT ret;
 
         /* append certs2 to result */
         num = sk_X509_num(certs2);
@@ -1720,6 +1749,7 @@ xmlSecOpenSSLX509StoreCombineCerts(STACK_OF(X509)* certs1, STACK_OF(X509)* certs
 
     /* done */
     return(res);
+#endif /* defined(XMLSEC_OPENSSL_API_300) */
 }
 
 
@@ -1728,7 +1758,7 @@ static X509*
 xmlSecOpenSSLX509FindChildCert(STACK_OF(X509) *chain, X509 *cert) {
     unsigned long certNameHash;
     unsigned long certNameHash2;
-    x509_size_t ii;
+    xmlSecOpenSSLSizeT ii;
 
     xmlSecAssert2(chain != NULL, NULL);
     xmlSecAssert2(cert != NULL, NULL);
@@ -1773,15 +1803,60 @@ xmlSecOpenSSLX509FindChildCert(STACK_OF(X509) *chain, X509 *cert) {
     return(NULL);
 }
 
+static int
+xmlSecOpenSSLX509NameReadCallback(
+    const xmlChar * name,
+    const xmlChar * value,
+    xmlSecSize valueSize,
+    int type,
+    void * context
+) {
+    X509_NAME *nm = NULL;
+    int valueLen;
+    int valueType;
+    int ret;
+
+    xmlSecAssert2(name != NULL, -1);
+    xmlSecAssert2(value != NULL, -1);
+    xmlSecAssert2(context != NULL, -1);
+
+    nm = (X509_NAME *)context;
+    xmlSecAssert2(nm != NULL, -1);
+
+    switch(type) {
+    case XMLSEC_X509_VALUE_TYPE_UF8_STRING:
+        valueType = MBSTRING_UTF8 ;
+        break;
+    case XMLSEC_X509_VALUE_TYPE_OCTET_STRING:
+        valueType = B_ASN1_OCTET_STRING;
+        break;
+    default:
+        xmlSecInvalidIntegerDataError("type", type, "should be either utf8 or octet string", NULL);
+        return(-1);
+    }
+
+    /* add to X509_NAME */
+    XMLSEC_SAFE_CAST_SIZE_TO_INT(valueSize, valueLen, return(-1), NULL);
+    ret = X509_NAME_add_entry_by_txt(nm, (char*)name, valueType, value, valueLen, -1, 0);
+    if(ret != 1) {
+        xmlSecOpenSSLError3("X509_NAME_add_entry_by_txt", NULL, "name=%s; type=%d", xmlSecErrorsSafeString(name), type);
+        return(-1);
+    }
+
+    /* success */
+    return(0);
+}
+
+
+/* OpenSSL doesn't accept "E" so we need to replace it */
+static xmlSecx509NameReplacements xmlSecOpenSSLX509NameReplacements[]  = {
+    { BAD_CAST "E", BAD_CAST  "emailAddress"},
+    { NULL, NULL }
+};
+
 static X509_NAME *
 xmlSecOpenSSLX509NameRead(const xmlChar *str) {
-    xmlSecByte name[256];
-    xmlSecByte value[256];
-    xmlSecSize strSize, nameSize, valueSize;
     X509_NAME *nm = NULL;
-    X509_NAME *res = NULL;
-    int type = MBSTRING_ASC;
-    int valueLen;
     int ret;
 
     xmlSecAssert2(str != NULL, NULL);
@@ -1789,176 +1864,18 @@ xmlSecOpenSSLX509NameRead(const xmlChar *str) {
     nm = X509_NAME_new();
     if(nm == NULL) {
         xmlSecOpenSSLError("X509_NAME_new", NULL);
-        goto done;
+        return(NULL);
     }
 
-    strSize = xmlSecStrlen(str);
-    while(strSize > 0) {
-        /* skip spaces after comma or semicolon */
-        while((strSize > 0) && isspace(*str)) {
-            ++str; --strSize;
-        }
-
-        nameSize = 0;
-        ret = xmlSecOpenSSLX509NameStringRead(&str, &strSize,
-            name, sizeof(name), &nameSize, '=', 0);
-        if(ret < 0) {
-            xmlSecInternalError("xmlSecOpenSSLX509NameStringRead", NULL);
-            goto done;
-        }
-        name[nameSize] = '\0';
-
-        /* handle synonymous */
-        if(xmlStrcmp(name, BAD_CAST "E") == 0) {
-            ret = xmlStrPrintf(name, sizeof(name), "emailAddress");
-            if(ret < 0) {
-                xmlSecInternalError("xmlStrPrintf(emailAddress)", NULL);
-                goto done;
-            }
-        }
-
-        if(strSize > 0) {
-            ++str; --strSize;
-            if((*str) == '\"') {
-                ++str; --strSize;
-                ret = xmlSecOpenSSLX509NameStringRead(&str, &strSize,
-                    value, sizeof(value), &valueSize, '"', 1);
-                if(ret < 0) {
-                    xmlSecInternalError("xmlSecOpenSSLX509NameStringRead", NULL);
-                    goto done;
-                }
-
-                /* skip quote */
-                if((strSize <= 0) || ((*str) != '\"')) {
-                    xmlSecInvalidIntegerDataError("char", (*str), "quote '\"'", NULL);
-                    goto done;
-                }
-                ++str; --strSize;
-
-                /* skip spaces before comma or semicolon */
-                while((strSize > 0) && isspace(*str)) {
-                    ++str; --strSize;
-                }
-                if((strSize > 0) && ((*str) != ',')) {
-                    xmlSecInvalidIntegerDataError("char", (*str), "comma ','", NULL);
-                    goto done;
-                }
-                if(strSize > 0) {
-                    ++str; --strSize;
-                }
-                type = MBSTRING_ASC;
-            } else if((*str) == '#') {
-                /* TODO: read octect values */
-                xmlSecNotImplementedError("reading octect values is not implemented yet");
-                goto done;
-            } else {
-                ret = xmlSecOpenSSLX509NameStringRead(&str, &strSize,
-                                        value, sizeof(value), &valueSize, ',', 1);
-                if(ret < 0) {
-                    xmlSecInternalError("xmlSecOpenSSLX509NameStringRead", NULL);
-                    goto done;
-                }
-                type = MBSTRING_ASC;
-            }
-        } else {
-            valueSize = 0;
-        }
-        value[valueSize] = '\0';
-        if(strSize > 0) {
-            ++str; --strSize;
-        }
-        XMLSEC_SAFE_CAST_SIZE_TO_INT(valueSize, valueLen, goto done, NULL);
-        ret = X509_NAME_add_entry_by_txt(nm, (char*)name, type, value, valueLen, -1, 0);
-        if(ret != 1) {
-            xmlSecOpenSSLError2("X509_NAME_add_entry_by_txt", NULL,
-                "name=%s", xmlSecErrorsSafeString(name));
-            goto done;
-        }
-    }
-
-    /* success */
-    res = nm;
-    nm = NULL;
-
-done:
-    if(nm != NULL) {
+    ret = xmlSecX509NameRead(str, xmlSecOpenSSLX509NameReplacements, xmlSecOpenSSLX509NameReadCallback, (void*)nm);
+    if(ret < 0) {
+        xmlSecInternalError("xmlSecX509NameRead", NULL);
         X509_NAME_free(nm);
-    }
-    return(res);
-}
-
-static int
-xmlSecOpenSSLX509NameStringRead(const xmlChar **in, xmlSecSize *inSize,
-                            xmlSecByte *out, xmlSecSize outSize,
-                            xmlSecSize *outWritten,
-                            xmlSecByte delim, int ingoreTrailingSpaces) {
-    xmlSecSize ii, jj, nonSpace;
-
-    xmlSecAssert2(in != NULL, -1);
-    xmlSecAssert2((*in) != NULL, -1);
-    xmlSecAssert2(inSize != NULL, -1);
-    xmlSecAssert2(out != NULL, -1);
-
-    ii = jj = nonSpace = 0;
-    while (ii < (*inSize)) {
-        xmlSecByte inCh, inCh2, outCh;
-
-        inCh = (*in)[ii];
-        if (inCh == delim) {
-            break;
-        }
-        if (jj >= outSize) {
-            xmlSecInvalidSizeOtherError("output buffer is too small", NULL);
-            return(-1);
-        }
-
-        if (inCh == '\\') {
-            /* try to move to next char after \\ */
-            ++ii;
-            if (ii >= (*inSize)) {
-                break;
-            }
-            inCh = (*in)[ii];
-
-            /* if next char after \\ is a hex then we expect \\XX, otherwise we just remove \\ */
-            if (xmlSecIsHex(inCh)) {
-                /* try to move to next char after \\X */
-                ++ii;
-                if (ii >= (*inSize)) {
-                    xmlSecInvalidDataError("two hex digits expected", NULL);
-                    return(-1);
-                }
-                inCh2 = (*in)[ii];
-                if (!xmlSecIsHex(inCh2)) {
-                    xmlSecInvalidDataError("two hex digits expected", NULL);
-                    return(-1);
-                }
-                outCh = xmlSecFromHex2(inCh, inCh2);
-            } else {
-                outCh = inCh;
-            }
-        } else {
-            outCh = inCh;
-        }
-
-        out[jj] = outCh;
-        ++ii;
-        ++jj;
-
-        if (ingoreTrailingSpaces && !isspace(outCh)) {
-            nonSpace = jj;
-        }
+        return(NULL);
     }
 
-    (*inSize) -= ii;
-    (*in) += ii;
-
-    if (ingoreTrailingSpaces) {
-        (*outWritten) = nonSpace;
-    } else {
-        (*outWritten) = (jj);
-    }
-    return(0);
+    /* succcess */
+    return(nm);
 }
 
 /*
@@ -1968,7 +1885,7 @@ static STACK_OF(X509_NAME_ENTRY)*
 xmlSecOpenSSLX509_NAME_ENTRIES_copy(X509_NAME * a) {
     STACK_OF(X509_NAME_ENTRY) * res = NULL;
     int ii;
-    int ret;
+    xmlSecOpenSSLSizeT ret;
 
     res = sk_X509_NAME_ENTRY_new(xmlSecOpenSSLX509_NAME_ENTRY_cmp);
     if(res == NULL) {
@@ -1992,16 +1909,23 @@ static
 int xmlSecOpenSSLX509_NAME_ENTRIES_cmp(STACK_OF(X509_NAME_ENTRY)* a,  STACK_OF(X509_NAME_ENTRY)* b) {
     const X509_NAME_ENTRY *na;
     const X509_NAME_ENTRY *nb;
-    int ii, ret;
+    xmlSecOpenSSLSizeT ii;
+    xmlSecOpenSSLSizeT num_a, num_b;
+    int ret;
 
     xmlSecAssert2(a != NULL, -1);
     xmlSecAssert2(b != NULL, 1);
 
-    if (sk_X509_NAME_ENTRY_num(a) != sk_X509_NAME_ENTRY_num(b)) {
-        return sk_X509_NAME_ENTRY_num(a) - sk_X509_NAME_ENTRY_num(b);
+    num_a = sk_X509_NAME_ENTRY_num(a);
+    num_b = sk_X509_NAME_ENTRY_num(b);
+    if (num_a > num_b) {
+        return(1);
+    } else if (num_a < num_b) {
+        return(-1);
     }
 
-    for (ii = sk_X509_NAME_ENTRY_num(a) - 1; ii >= 0; --ii) {
+    /* num_a == num_b */
+    for (ii = 0; ii < num_a; ++ii) {
         na = sk_X509_NAME_ENTRY_value(a, ii);
         nb = sk_X509_NAME_ENTRY_value(b, ii);
 

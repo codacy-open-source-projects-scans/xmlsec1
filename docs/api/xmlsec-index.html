@@ -7,7 +7,7 @@
 <link rel="home" href="index.html" title="XML Security Library Reference Manual">
 <link rel="up" href="xmlsec-reference.html" title="Part II. XML Security Library API Reference.">
 <link rel="prev" href="xmlsec-mscng-x509.html" title="x509">
-<meta name="generator" content="GTK-Doc V1.33.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.34.0 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -24,7 +24,6 @@
 <p>
 	</p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
-<li class="listitem"><p><font>ATTRIBUTE-UNUSED</font></p></li>
 <li class="listitem"><p><font>UNREFERENCED-PARAMETER</font></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-xmlenc.html#xmlEncCtxMode" title="enum xmlEncCtxMode">xmlEncCtxMode</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-xmltree.html#xmlSecAddChild" title="xmlSecAddChild ()">xmlSecAddChild</a></p></li>
@@ -35,6 +34,7 @@
 <li class="listitem"><p><a class="link" href="xmlsec-buffer.html#xmlSecAllocMode" title="enum xmlSecAllocMode">xmlSecAllocMode</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-errors.html#xmlSecAssert2" title="xmlSecAssert2()">xmlSecAssert2</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-errors.html#xmlSecAssert" title="xmlSecAssert()">xmlSecAssert</a></p></li>
+<li class="listitem"><p><font>XMLSEC-ATTRIBUTE-UNUSED</font></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-base64.html#xmlSecBase64CtxCreate" title="xmlSecBase64CtxCreate ()">xmlSecBase64CtxCreate</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-base64.html#xmlSecBase64CtxDestroy" title="xmlSecBase64CtxDestroy ()">xmlSecBase64CtxDestroy</a></p></li>
 <li class="listitem"><p><font>xmlSecBase64CtxFinal-ex</font></p></li>
@@ -225,6 +225,7 @@
 <li class="listitem"><p><a class="link" href="xmlsec-errors.html#xmlSecErrorsInit" title="xmlSecErrorsInit ()">xmlSecErrorsInit</a></p></li>
 <li class="listitem"><p><font>XMLSEC-ERRORS-MAX-NUMBER</font></p></li>
 <li class="listitem"><p><font>XMLSEC-ERRORS-NO-MESSAGE</font></p></li>
+<li class="listitem"><p><a class="link" href="xmlsec-errors.html#xmlSecErrorsPrintCryptoLibraryLogOnExitSet" title="xmlSecErrorsPrintCryptoLibraryLogOnExitSet ()">xmlSecErrorsPrintCryptoLibraryLogOnExitSet</a></p></li>
 <li class="listitem"><p><font>XMLSEC-ERRORS-R-ASSERTION</font></p></li>
 <li class="listitem"><p><font>XMLSEC-ERRORS-R-CERT-HAS-EXPIRED</font></p></li>
 <li class="listitem"><p><font>XMLSEC-ERRORS-R-CERT-ISSUER-FAILED</font></p></li>
@@ -682,8 +683,6 @@
 <li class="listitem"><p><a class="link" href="xmlsec-keysdata.html#xmlSecKeyDataFormat" title="enum xmlSecKeyDataFormat">xmlSecKeyDataFormat</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-keysdata.html#xmlSecKeyDataGenerateMethod" title="xmlSecKeyDataGenerateMethod ()">xmlSecKeyDataGenerateMethod</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-keysdata.html#xmlSecKeyDataGenerate" title="xmlSecKeyDataGenerate ()">xmlSecKeyDataGenerate</a></p></li>
-<li class="listitem"><p><a class="link" href="xmlsec-keysdata.html#xmlSecKeyDataGetIdentifierMethod" title="xmlSecKeyDataGetIdentifierMethod ()">xmlSecKeyDataGetIdentifierMethod</a></p></li>
-<li class="listitem"><p><a class="link" href="xmlsec-keysdata.html#xmlSecKeyDataGetIdentifier" title="xmlSecKeyDataGetIdentifier ()">xmlSecKeyDataGetIdentifier</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-keysdata.html#xmlSecKeyDataGetName" title="xmlSecKeyDataGetName()">xmlSecKeyDataGetName</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-keysdata.html#xmlSecKeyDataGetSizeMethod" title="xmlSecKeyDataGetSizeMethod ()">xmlSecKeyDataGetSizeMethod</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-keysdata.html#xmlSecKeyDataGetSize" title="xmlSecKeyDataGetSize ()">xmlSecKeyDataGetSize</a></p></li>
@@ -811,6 +810,7 @@
 <li class="listitem"><p><font>XMLSEC-KEYINFO-FLAGS-STOP-ON-UNKNOWN-CHILD</font></p></li>
 <li class="listitem"><p><font>XMLSEC-KEYINFO-FLAGS-X509DATA-DONT-VERIFY-CERTS</font></p></li>
 <li class="listitem"><p><font>XMLSEC-KEYINFO-FLAGS-X509DATA-SKIP-STRICT-CHECKS</font></p></li>
+<li class="listitem"><p><font>XMLSEC-KEYINFO-FLAGS-X509DATA-SKIP-TIME-CHECKS</font></p></li>
 <li class="listitem"><p><font>XMLSEC-KEYINFO-FLAGS-X509DATA-STOP-ON-INVALID-CERT</font></p></li>
 <li class="listitem"><p><font>XMLSEC-KEYINFO-FLAGS-X509DATA-STOP-ON-UNKNOWN-CERT</font></p></li>
 <li class="listitem"><p><font>XMLSEC-KEYINFO-FLAGS-X509DATA-STOP-ON-UNKNOWN-CHILD</font></p></li>
@@ -1750,6 +1750,8 @@
 <li class="listitem"><p><a class="link" href="xmlsec-templates.html#xmlSecTmplSignatureGetSignMethodNode" title="xmlSecTmplSignatureGetSignMethodNode ()">xmlSecTmplSignatureGetSignMethodNode</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-templates.html#xmlSecTmplTransformAddC14NInclNamespaces" title="xmlSecTmplTransformAddC14NInclNamespaces ()">xmlSecTmplTransformAddC14NInclNamespaces</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-templates.html#xmlSecTmplTransformAddHmacOutputLength" title="xmlSecTmplTransformAddHmacOutputLength ()">xmlSecTmplTransformAddHmacOutputLength</a></p></li>
+<li class="listitem"><p><a class="link" href="xmlsec-templates.html#xmlSecTmplTransformAddRsaDigest" title="xmlSecTmplTransformAddRsaDigest ()">xmlSecTmplTransformAddRsaDigest</a></p></li>
+<li class="listitem"><p><a class="link" href="xmlsec-templates.html#xmlSecTmplTransformAddRsaMgf" title="xmlSecTmplTransformAddRsaMgf ()">xmlSecTmplTransformAddRsaMgf</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-templates.html#xmlSecTmplTransformAddRsaOaepParam" title="xmlSecTmplTransformAddRsaOaepParam ()">xmlSecTmplTransformAddRsaOaepParam</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-templates.html#xmlSecTmplTransformAddXPath2" title="xmlSecTmplTransformAddXPath2 ()">xmlSecTmplTransformAddXPath2</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-templates.html#xmlSecTmplTransformAddXPath" title="xmlSecTmplTransformAddXPath ()">xmlSecTmplTransformAddXPath</a></p></li>
@@ -1863,6 +1865,7 @@
 <li class="listitem"><p><a class="link" href="xmlsec-transforms.html#xmlSecTransformExecuteMethod" title="xmlSecTransformExecuteMethod ()">xmlSecTransformExecuteMethod</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-transforms.html#xmlSecTransformExecute" title="xmlSecTransformExecute ()">xmlSecTransformExecute</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-transforms.html#xmlSecTransformFinalizeMethod" title="xmlSecTransformFinalizeMethod ()">xmlSecTransformFinalizeMethod</a></p></li>
+<li class="listitem"><p><font>XMLSEC-TRANSFORM-FLAGS-USER-SPECIFIED</font></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-transforms.html#xmlSecTransformGetDataTypeMethod" title="xmlSecTransformGetDataTypeMethod ()">xmlSecTransformGetDataTypeMethod</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-transforms.html#xmlSecTransformGetDataType" title="xmlSecTransformGetDataType ()">xmlSecTransformGetDataType</a></p></li>
 <li class="listitem"><p><a class="link" href="xmlsec-transforms.html#xmlSecTransformGetName" title="xmlSecTransformGetName()">xmlSecTransformGetName</a></p></li>
@@ -2088,6 +2091,6 @@
     </p>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.33.1</div>
+<hr>Generated by GTK-Doc V1.34.0</div>
 </body>
 </html>

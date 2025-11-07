@@ -149,41 +149,55 @@ xmlSecNssPKIKeyDataAdoptKey(xmlSecKeyDataPtr data,
                             SECKEYPublicKey  *pubkey)
 {
     xmlSecNssPKIKeyDataCtxPtr ctx;
+    SECKEYPublicKey *pubkey2 = NULL;
     KeyType pubType = nullKey;
     KeyType priType = nullKey;
 
     xmlSecAssert2(xmlSecKeyDataIsValid(data), -1);
     xmlSecAssert2(xmlSecKeyDataCheckSize(data, xmlSecNssPKIKeyDataSize), -1);
 
-    if(privkey != NULL) {
-        priType = SECKEY_GetPrivateKeyType(privkey);
-    }
-
-    if(pubkey != NULL) {
-        pubType = SECKEY_GetPublicKeyType(pubkey);
-    }
-
-    if(priType != nullKey && pubType != nullKey) {
-        if(pubType != priType) {
-            xmlSecNssError3("SECKEY_GetPrivateKeyType/SECKEY_GetPublicKeyType", NULL,
-                "pubType=%u; priType=%u", pubType, priType);
-            return -1;
-        }
-    }
-
     ctx = xmlSecNssPKIKeyDataGetCtx(data);
     xmlSecAssert2(ctx != NULL, -1);
 
-    if (ctx->privkey) {
+    /* get public key if needed from private */
+    if ((pubkey == NULL) && (privkey != NULL)) {
+        pubkey2 = SECKEY_ConvertToPublicKey(privkey);
+        if(pubkey2 == NULL) {
+            xmlSecNssError("SECKEY_ConvertToPublicKey", NULL);
+            return(-1);
+        }
+    }
+
+    /* ensure key types match */
+    if (privkey != NULL) {
+        priType = SECKEY_GetPrivateKeyType(privkey);
+    }
+
+    if (pubkey != NULL) {
+        pubType = SECKEY_GetPublicKeyType(pubkey);
+    } else if (pubkey2 != NULL) {
+        pubType = SECKEY_GetPublicKeyType(pubkey2);
+    }
+    if ((priType != nullKey) && (pubType != priType)) {
+        xmlSecNssError3("SECKEY_GetPrivateKeyType/SECKEY_GetPublicKeyType", NULL, "pubType=%u; priType=%u", pubType, priType);
+        if (pubkey2 != NULL) {
+            SECKEY_DestroyPublicKey(pubkey2);
+        }
+        return(-1);
+    }
+
+    /* destroy old keys (if needed) and set new ones */
+    if (ctx->privkey != NULL) {
         SECKEY_DestroyPrivateKey(ctx->privkey);
     }
     ctx->privkey = privkey;
 
-    if (ctx->pubkey) {
+    if (ctx->pubkey != NULL) {
         SECKEY_DestroyPublicKey(ctx->pubkey);
     }
-    ctx->pubkey = pubkey;
+    ctx->pubkey = (pubkey != NULL) ? pubkey : pubkey2;
 
+    /* done */
     return(0);
 }
 
@@ -465,7 +479,7 @@ static xmlSecKeyDataKlass xmlSecNssKeyDataDEREncodedKeyValueKlass = {
     /* get info */
     NULL,                                       /* xmlSecKeyDataGetTypeMethod getType; */
     NULL,                                       /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                                       /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                                       /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecNssKeyDataDEREncodedKeyValueXmlRead,     /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -729,7 +743,8 @@ done:
  * ============================================================================
  *
  * To support reading/writing private keys an X element added (before Y).
- * todo: The current implementation does not support Seed and PgenCounter!
+ *
+ * The current implementation does not support Seed and PgenCounter!
  * by this the P, Q and G are *required*!
  *
  *************************************************************************/
@@ -785,7 +800,7 @@ static xmlSecKeyDataKlass xmlSecNssKeyDataDsaKlass = {
     /* get info */
     xmlSecNssKeyDataDsaGetType,         /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecNssKeyDataDsaGetSize,         /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                               /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                               /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecNssKeyDataDsaXmlRead,         /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -855,7 +870,7 @@ xmlSecNssKeyDataDsaXmlWrite(xmlSecKeyDataId id, xmlSecKeyPtr key,
 }
 
 static int
-xmlSecNssKeyDataDsaGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type ATTRIBUTE_UNUSED) {
+xmlSecNssKeyDataDsaGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type XMLSEC_ATTRIBUTE_UNUSED) {
     PQGParams    *pqgParams = NULL;
     PQGVerify    *pqgVerify = NULL;
     SECStatus     rv;
@@ -1062,8 +1077,6 @@ xmlSecNssKeyDataDsaRead(xmlSecKeyDataId id, xmlSecKeyValueDsaPtr dsaValue) {
         goto done;
     }
 
-    /* todo: add support for J , seed, pgencounter */
-
     /* create key */
     handle = PK11_ImportPublicKey(slot, pubkey, PR_FALSE);
     if(handle == CK_INVALID_HANDLE) {
@@ -1110,7 +1123,7 @@ done:
 static int
 xmlSecNssKeyDataDsaWrite(xmlSecKeyDataId id, xmlSecKeyDataPtr data,
                          xmlSecKeyValueDsaPtr dsaValue,
-                         int writePrivateKey ATTRIBUTE_UNUSED) {
+                         int writePrivateKey XMLSEC_ATTRIBUTE_UNUSED) {
     xmlSecNssPKIKeyDataCtxPtr ctx;
     int ret;
 
@@ -1260,7 +1273,7 @@ static xmlSecKeyDataKlass xmlSecNssKeyDataRsaKlass = {
     /* get info */
     xmlSecNssKeyDataRsaGetType,         /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecNssKeyDataRsaGetSize,         /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                               /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                               /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecNssKeyDataRsaXmlRead,         /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -1469,7 +1482,7 @@ done:
 static int
 xmlSecNssKeyDataRsaWrite(xmlSecKeyDataId id,xmlSecKeyDataPtr data,
                          xmlSecKeyValueRsaPtr rsaValue,
-                         int writePrivateKey ATTRIBUTE_UNUSED) {
+                         int writePrivateKey XMLSEC_ATTRIBUTE_UNUSED) {
     xmlSecNssPKIKeyDataCtxPtr ctx;
     int ret;
 
@@ -1506,7 +1519,7 @@ xmlSecNssKeyDataRsaWrite(xmlSecKeyDataId id,xmlSecKeyDataPtr data,
 }
 
 static int
-xmlSecNssKeyDataRsaGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type ATTRIBUTE_UNUSED) {
+xmlSecNssKeyDataRsaGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type XMLSEC_ATTRIBUTE_UNUSED) {
     PK11RSAGenParams  params;
     PK11SlotInfo *slot = NULL;
     SECKEYPrivateKey *privkey = NULL;
@@ -1618,7 +1631,7 @@ static xmlSecKeyDataKlass xmlSecNssKeyDataEcKlass = {
     /* get info */
     xmlSecNssKeyDataEcGetType,                  /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecNssKeyDataEcGetSize,                  /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                                       /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                                       /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecNssKeyDataEcXmlRead,                  /* xmlSecKeyDataXmlReadMethod xmlRead; */

@@ -17,6 +17,7 @@
 #endif /* XMLSEC_PRIVATE */
 
 #include <errno.h>
+#include <xmlsec/exports.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -261,18 +262,34 @@ extern "C" {
 
 /**
  * xmlSecNotImplementedError:
- * @details:           the additional details.
+ * @msg:                the extra message.
  *
  * Macro. The XMLSec library macro for reporting "not implemented" errors.
  */
-#define xmlSecNotImplementedError(details) \
+#define xmlSecNotImplementedError(msg) \
         xmlSecError(XMLSEC_ERRORS_HERE,                     \
                     NULL,                                   \
                     NULL,                                   \
                     XMLSEC_ERRORS_R_NOT_IMPLEMENTED,        \
                     "details=%s",                           \
-                    xmlSecErrorsSafeString(details)         \
+                    xmlSecErrorsSafeString(msg)         \
         )
+
+/**
+ * xmlSecNotImplementedError2:
+ * @msg:                the extra message.
+ * @param:              the extra message param.
+ *
+ * Macro. The XMLSec library macro for reporting "not implemented" errors.
+ */
+#define xmlSecNotImplementedError2(msg, param) \
+        xmlSecError(XMLSEC_ERRORS_HERE,                     \
+                    NULL,                                   \
+                    NULL,                                   \
+                    XMLSEC_ERRORS_R_NOT_IMPLEMENTED,        \
+                    (msg), (param)                          \
+        )
+
 /**
  * xmlSecInvalidSizeError:
  * @name:               the name of the variable, parameter, etc.
@@ -949,7 +966,7 @@ extern "C" {
  *
  * Macro. The XMLSec library macro for reporting other XMLSec errors.
  */
-#define xmlSecOtherError2(code, errorObject, msg, param) \
+#define xmlSecOtherError2(code, errorObject, msg, param)    \
         xmlSecError(XMLSEC_ERRORS_HERE,                     \
                     (const char*)(errorObject),             \
                     NULL,                                   \
@@ -1013,6 +1030,10 @@ extern "C" {
                     (code),                                 \
                     (msg), (param1), (param2), (param3), (param4) \
         )
+
+
+XMLSEC_EXPORT int   xmlSecErrorsPrintCryptoLibraryLogOnExitIsEnabled    (void);
+
 
 #ifdef __cplusplus
 }

@@ -23,9 +23,9 @@
 #include <xmlsec/keys.h>
 #include <xmlsec/errors.h>
 #include <xmlsec/keysmngr.h>
-#include <xmlsec/private.h>
 #include <xmlsec/transforms.h>
 #include <xmlsec/xmltree.h>
+#include <xmlsec/private.h>
 
 #include <xmlsec/mscng/app.h>
 #include <xmlsec/mscng/crypto.h>
@@ -120,7 +120,7 @@ xmlSecMSCngAppGetCertStoreName(void) {
  * Returns: pointer to the key or NULL if an error occurs.
  */
 xmlSecKeyPtr
-xmlSecMSCngAppKeyLoadEx(const char *filename, xmlSecKeyDataType type ATTRIBUTE_UNUSED, xmlSecKeyDataFormat format,
+xmlSecMSCngAppKeyLoadEx(const char *filename, xmlSecKeyDataType type XMLSEC_ATTRIBUTE_UNUSED, xmlSecKeyDataFormat format,
     const char *pwd, void* pwdCallback, void* pwdCallbackCtx
 ) {
     xmlSecBuffer buffer;
@@ -306,8 +306,7 @@ xmlSecMSCngAppKeyCertLoad(xmlSecKeyPtr key, const char* filename,
     xmlSecAssert2(filename != NULL, -1);
     xmlSecAssert2(format != xmlSecKeyDataFormatUnknown, -1);
 
-    /* TODO */
-    xmlSecNotImplementedError(NULL);
+    xmlSecNotImplementedError("MSCNG doesn't support loading X509 certificates at runtime");
     return(-1);
 }
 
@@ -330,8 +329,7 @@ xmlSecMSCngAppKeyCertLoadMemory(xmlSecKeyPtr key, const xmlSecByte* data, xmlSec
     xmlSecAssert2(dataSize > 0, -1);
     xmlSecAssert2(format != xmlSecKeyDataFormatUnknown, -1);
 
-    /* TODO */
-    xmlSecNotImplementedError(NULL);
+    xmlSecNotImplementedError("MSCNG doesn't support loading X509 certificates at runtime");
     return(-1);
 }
 
@@ -394,6 +392,21 @@ xmlSecMSCngAppPkcs12Load(const char *filename,
     return(key);
 }
 
+static BOOL
+xmlSecMSCngIsPrivateKeyCert(PCCERT_CONTEXT cert, BOOL isPersistentKey) {
+    xmlSecAssert2(cert != NULL, FALSE);
+
+    if (isPersistentKey) {
+        DWORD dwData = 0;
+        DWORD dwDataLen = sizeof(dwData);
+        return(CertGetCertificateContextProperty(cert, CERT_KEY_SPEC_PROP_ID, &dwData, &dwDataLen));
+    } else {
+        CERT_KEY_CONTEXT ckc;
+        DWORD dwDataLen = sizeof(ckc);
+        return CertGetCertificateContextProperty(cert, CERT_KEY_CONTEXT_PROP_ID, &ckc, &dwDataLen);
+    }
+}
+
 /**
  * xmlSecMSCngAppPkcs12LoadMemory:
  * @data:               the key binary data.
@@ -451,7 +464,7 @@ xmlSecMSCngAppPkcs12LoadMemory(const xmlSecByte* data, xmlSecSize dataSize, cons
         goto cleanup;
     }
 
-    DWORD flags = CRYPT_EXPORTABLE | PKCS12_PREFER_CNG_KSP;
+    DWORD flags = CRYPT_EXPORTABLE | PKCS12_ALWAYS_CNG_KSP;
     if (!xmlSecImportGetPersistKey()) {
         flags |= PKCS12_NO_PERSIST_KEY;
     }
@@ -469,17 +482,8 @@ xmlSecMSCngAppPkcs12LoadMemory(const xmlSecByte* data, xmlSecSize dataSize, cons
 
     /* enumerate over certifiates in the store */
     while((cert = CertEnumCertificatesInStore(certStore, cert)) != NULL) {
-        DWORD dwData = 0;
-        DWORD dwDataLen = sizeof(dwData);
-
-        ret = CertGetCertificateContextProperty(cert, CERT_KEY_SPEC_PROP_ID,
-            &dwData, &dwDataLen);
-        if(ret == TRUE) {
-            if (privKeyData != NULL) {
-                /* multiple private keys, use the first one */
-                continue;
-            }
-
+        /* multiple private keys, use the first one */
+        if ((privKeyData == NULL) && (xmlSecMSCngIsPrivateKeyCert(cert, xmlSecImportGetPersistKey()) == TRUE)) {
             /* get key name */
             if (keyName == NULL) {
                 keyName = xmlSecMSCngX509GetFriendlyNameUtf8(cert);
@@ -487,14 +491,13 @@ xmlSecMSCngAppPkcs12LoadMemory(const xmlSecByte* data, xmlSecSize dataSize, cons
 
             /* adopt private key */
             certDuplicate = CertDuplicateCertificateContext(cert);
-            if(certDuplicate == NULL) {
+            if (certDuplicate == NULL) {
                 xmlSecMSCngLastError("CertDuplicateCertificateContext", NULL);
                 goto cleanup;
             }
 
-            privKeyData = xmlSecMSCngCertAdopt(certDuplicate,
-                xmlSecKeyDataTypePrivate | xmlSecKeyDataTypePublic);
-            if(privKeyData == NULL) {
+            privKeyData = xmlSecMSCngCertAdopt(certDuplicate, xmlSecKeyDataTypePrivate | xmlSecKeyDataTypePublic);
+            if (privKeyData == NULL) {
                 xmlSecInternalError("xmlSecMSCngCertAdopt", NULL);
                 goto cleanup;
             }
@@ -723,8 +726,7 @@ xmlSecMSCngAppKeysMngrCrlLoad(xmlSecKeysMngrPtr mngr, const char *filename, xmlS
     xmlSecAssert2(filename != NULL, -1);
     xmlSecAssert2(format != xmlSecKeyDataFormatUnknown, -1);
 
-    /* TODO */
-    xmlSecNotImplementedError(NULL);
+    xmlSecNotImplementedError("MSCNG doesn't support loading X509 CRLs at runtime");
     return(-1);
 }
 
@@ -746,8 +748,7 @@ xmlSecMSCngAppKeysMngrCrlLoadMemory(xmlSecKeysMngrPtr mngr, const xmlSecByte* da
     xmlSecAssert2(dataSize > 0, -1);
     xmlSecAssert2(format != xmlSecKeyDataFormatUnknown, -1);
 
-    /* TODO */
-    xmlSecNotImplementedError(NULL);
+    xmlSecNotImplementedError("MSCNG doesn't support loading X509 CRLs at runtime");
     return(-1);
 }
 
@@ -869,7 +870,7 @@ xmlSecMSCngAppDefaultKeysMngrVerifyKey(xmlSecKeysMngrPtr mngr, xmlSecKeyPtr key,
     xmlSecAssert2(key != NULL, -1);
     xmlSecAssert2(keyInfoCtx != NULL, -1);
 
-    xmlSecNotImplementedError("X509 support is disabled");
+    xmlSecNotImplementedError("X509 support is disabled during compilation");
     return(-1);
 
 #endif /* XMLSEC_NO_X509 */
@@ -952,6 +953,6 @@ xmlSecMSCngAppDefaultKeysMngrSave(xmlSecKeysMngrPtr mngr, const char* filename, 
  */
 void*
 xmlSecMSCngAppGetDefaultPwdCallback(void) {
-    /* TODO */
+    /* TODO: MSCNG doesn't support password callback */
     return(NULL);
 }

@@ -1,5 +1,7 @@
 /**
- * XML Security standards test: XMLDSig
+ * XML Security Library (http://www.aleksey.com/xmlsec).
+ *
+ * Command line utility.
  *
  * See Copyright for the status of this software.
  *
@@ -52,13 +54,13 @@
 #include "cmdline.h"
 
 
-#if defined(_MSC_VER) && defined(_CRTDBG_MAP_ALLOC)
+#if defined(_MSC_VER) && defined(_DEBUG)
 #include <crtdbg.h>
-#endif /*defined(_MSC_VER) && defined(_CRTDBG_MAP_ALLOC) */
+#endif /*defined(_MSC_VER) && defined(_DEBUG) */
 
 static const char copyright[] =
     "Written by Aleksey Sanin <aleksey@aleksey.com>.\n\n"
-    "Copyright (C) 2002-2024 Aleksey Sanin <aleksey@aleksey.com>. All Rights Reserved..\n"
+    "Copyright (C) 2002-2024 Aleksey Sanin <aleksey@aleksey.com>. All Rights Reserved.\n"
     "This is free software: see the source for copying information.\n";
 
 static const char bugs[] =
@@ -232,6 +234,17 @@ static xmlSecAppCmdLineParam verboseParam = {
     NULL,
     "--verbose"
     "\n\tprint detailed error messages",
+    xmlSecAppCmdLineParamTypeFlag,
+    xmlSecAppCmdLineParamFlagNone,
+    NULL
+};
+
+static xmlSecAppCmdLineParam printCryptoErrorsParam = {
+    xmlSecAppCmdLineTopicGeneral,
+    "--print-crypto-library-errors",
+    NULL,
+    "--print-crypto-library-errors"
+    "\n\tprint errors from crypto library (OpenSSL only)",
     xmlSecAppCmdLineParamTypeFlag,
     xmlSecAppCmdLineParamFlagNone,
     NULL
@@ -484,9 +497,13 @@ static xmlSecAppCmdLineParam enabledKeyDataParam = {
     "--enabled-key-data",
     NULL,
     "--enabled-key-data <list>"
-    "\n\tcomma separated list of enabled key data (list of "
-    "\n\tregistered key data klasses is available with \"--list-key-data\""
-    "\n\tcommand); by default, all registered key data are enabled",
+    "\n\tcomma-separated list of key-data types to enable."
+    "\n\tExample:"
+    "\n\t  rsa,key-value,x509  -> populates <RSAKeyValue> and keeps <X509Data>"
+    "\n\t                         when <KeyValue/> and <X509Data/> placeholders"
+    "\n\t                         are present in the template."
+    "\n\tUse \"--list-key-data\" to view full list of registered key data klasses."
+    "\n\tBy default, all registered key data are enabled.",
     xmlSecAppCmdLineParamTypeStringList,
     xmlSecAppCmdLineParamFlagParamNameValue | xmlSecAppCmdLineParamFlagMultipleValues,
     NULL
@@ -657,14 +674,25 @@ static xmlSecAppCmdLineParam idAttrParam = {
     "\n\tadds attributes <attr-name> (default value \"id\") from all nodes"
     "\n\twith<node-name> and namespace <node-namespace-uri> to the list of"
     "\n\tknown ID attributes; this is a hack and if you can use DTD or schema"
-    "\n\tto declare ID attributes instead (see \"--dtd-file\" option),"
-    "\n\tI don't know what else might be broken in your application when"
-    "\n\tyou use this hack",
+    "\n\tto declare ID attributes instead (see \"--dtd-file\" option)",
     xmlSecAppCmdLineParamTypeString,
     xmlSecAppCmdLineParamFlagParamNameValue | xmlSecAppCmdLineParamFlagMultipleValues,
     NULL
 };
 
+static xmlSecAppCmdLineParam addIdAttrParam = {
+    xmlSecAppCmdLineTopicDSigCommon |
+    xmlSecAppCmdLineTopicEncCommon,
+    "--add-id-attr",
+    NULL,
+    "--add-id-attr <id-attribute-name>"
+    "\n\tadds attribute <id-attribute-name> to all nodes in the document;"
+    "\n\tthis is a hack and if you can use DTD or schema to declare ID attributes"
+    "\n\tinstead (see \"--dtd-file\" option)",
+    xmlSecAppCmdLineParamTypeString,
+    xmlSecAppCmdLineParamFlagParamNameValue | xmlSecAppCmdLineParamFlagMultipleValues,
+    NULL
+};
 
 static xmlSecAppCmdLineParam xxeParam = {
     xmlSecAppCmdLineTopicAll,
@@ -1022,6 +1050,7 @@ static xmlSecAppCmdLineParamPtr parameters[] = {
     &nodeNameParam,
     &nodeXPathParam,
     &idAttrParam,
+    &addIdAttrParam,
 
     /* Keys Manager params */
     &enabledKeyDataParam,
@@ -1087,6 +1116,7 @@ static xmlSecAppCmdLineParamPtr parameters[] = {
     &cryptoParam,
     &cryptoConfigParam,
     &verboseParam,
+    &printCryptoErrorsParam,
     &repeatParam,
     &base64LineSizeParam,
     &transformBinChunkSizeParam,
@@ -1222,6 +1252,11 @@ int main(int argc, const char **argv) {
     int res = 1;
     int ret;
 
+#if defined(_MSC_VER) && defined(_DEBUG)
+    fprintf(stderr, "Enabling memory leaks detection\n");
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_DELAY_FREE_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif /* */
+
 #if defined(XMLSEC_WINDOWS)
     /* convert command line to UTF8 from locale or UNICODE */
     utf8_argv_size = sizeof(char*) * (size_t)argc;
@@ -1324,7 +1359,9 @@ done:
     }
 #endif /* defined(XMLSEC_WINDOWS) */
 
-#if defined(_MSC_VER) && defined(_CRTDBG_MAP_ALLOC)
+#if defined(_MSC_VER) && defined(_DEBUG)
+    fprintf(stderr, "Printing memory leaks detected:\n");
+
     _CrtSetReportMode(_CRT_WARN,    _CRTDBG_MODE_FILE);
     _CrtSetReportMode(_CRT_ERROR,   _CRTDBG_MODE_FILE);
     _CrtSetReportMode(_CRT_ASSERT,  _CRTDBG_MODE_FILE);
@@ -1332,7 +1369,11 @@ done:
     _CrtSetReportFile(_CRT_WARN,    _CRTDBG_FILE_STDERR);
     _CrtSetReportFile(_CRT_ERROR,   _CRTDBG_FILE_STDERR);
     _CrtSetReportFile(_CRT_ASSERT,  _CRTDBG_FILE_STDERR);
-    _CrtDumpMemoryLeaks();
+    if (_CrtDumpMemoryLeaks()) {
+        fprintf(stderr, "Finished printing memory leaks detected\n");
+        return(1);
+    }
+    fprintf(stderr, "No memory leaks detected\n");
 #endif /*  defined(_MSC_VER) && defined(_CRTDBG_MAP_ALLOC) */
 
     return(res);
@@ -1383,6 +1424,11 @@ xmlSecAppExecute(xmlSecAppCommand command, const char** utf8_argv, int argc) {
        xmlSecErrorsDefaultCallbackEnableOutput(1);
     } else {
        xmlSecErrorsDefaultCallbackEnableOutput(0);
+    }
+
+    /* enable deatiled crypto library errors on exit */
+    if(xmlSecAppCmdLineParamIsSet(&printCryptoErrorsParam)) {
+       xmlSecErrorsPrintCryptoLibraryLogOnExitSet(1);
     }
 
 
@@ -3053,10 +3099,6 @@ xmlSecAppInit(void) {
     /* Init libxml */
     xmlInitParser();
     LIBXML_TEST_VERSION
-#ifndef XMLSEC_NO_XSLT
-    xmlIndentTreeOutput = 1;
-#endif /* XMLSEC_NO_XSLT */
-
 
     /* Init libxslt */
 #ifndef XMLSEC_NO_XSLT
@@ -3225,6 +3267,20 @@ xmlSecAppXmlDataCreate(const char* filename, const xmlChar* defStartNodeName, co
         xmlFree(buf);
     }
 
+    /* add ID attributes from command line */
+    for(value = addIdAttrParam.value; value != NULL; value = value->next) {
+        const xmlChar* idAttr[] = { NULL, NULL };
+
+        if(value->strValue == NULL) {
+            fprintf(stderr, "Error: invalid value for option \"%s\".\n",
+                    idAttrParam.fullName);
+            xmlSecAppXmlDataDestroy(data);
+            return(NULL);
+        }
+
+        idAttr[0] = BAD_CAST value->strValue;
+        xmlSecAddIDs(data->doc, NULL, idAttr);
+    }
 
     /* now find the start node */
     if(xmlSecAppCmdLineParamGetString(&nodeIdParam) != NULL) {

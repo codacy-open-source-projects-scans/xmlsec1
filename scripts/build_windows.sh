@@ -2,17 +2,17 @@
 #
 # MUST BE RUN FROM x64 Native Tools Command Prompt
 #
-# $ bash build_windows.sh
+# $ c:\cygwin64\bin\bash build_windows.sh
 #
-libxml2_version="2.13.4"
-libxslt_version="1.1.42"
-openssl_version="3.4.0"
-xmlsec_version="1.3.7-rc1"
+libxml2_version="2.15.1"
+libxslt_version="1.1.43"
+openssl_version="3.6.0"
+xmlsec_version="1.3.9-rc1"
 
 pwd=`pwd`
 script_dir=`dirname $0`
-work_dir="c:\\local\\dev"
-distro_dir="c:\\local\\distro"
+work_dir=`cygpath "d:\\home\\aleksey\\dev"`
+distro_dir="d:\\home\\aleksey\\distro"
 libxml2_output_dir="${distro_dir}\libxml2"
 libxslt_output_dir="${distro_dir}\libxslt"
 openssl_output_dir="${distro_dir}\openssl"
@@ -22,7 +22,14 @@ zip_folders_and_files="libxml2 libxslt openssl xmlsec README.md"
 zip_output_file="${distro_dir}\\xmlsec1-${xmlsec_version}-win64.zip"
 
 PERL_PATH="C:\\Strawberry\\perl\\bin"
-LOG_FILE="C:\\temp\\build-windows.log"
+LOG_FILE=`cygpath "d:\\home\\aleksey\\tmp\\build-windows.log"`
+
+CMAKE_XMLSEC_BUILDDIR=builddir
+CMAKE_XMLSEC_ARCH="x64"
+CMAKE_XMLSEC_GENERATOR="Visual Studio 17 2022"
+CMAKE_XMLSEC_RUNTIME="MultiThreadedDLL"
+CMAKE_XMLSEC_CONFIG=Release
+CMAKE_XMLSEC_SHARED_LIBS=ON
 
 function build_libxml2 {
   # check if already built
@@ -52,14 +59,31 @@ function build_libxml2 {
   tar xvfz "${full_name}.tar.gz" 2>> "${LOG_FILE}"
 
   echo "*** Configuring \"${full_name}\" ..."
-  cd "${full_name}\win32"
-  cscript configure.js iconv=no zlib=no cruntime=/MD prefix="${libxml2_output_dir}" >> "${LOG_FILE}"
+  cd "${full_name}"
+  cmake -B "${CMAKE_XMLSEC_BUILDDIR}" -A "${CMAKE_XMLSEC_ARCH}" -G "${CMAKE_XMLSEC_GENERATOR}" \
+	  -D CMAKE_MSVC_RUNTIME_LIBRARY="${CMAKE_XMLSEC_RUNTIME}" \
+	  -D BUILD_SHARED_LIBS="${CMAKE_XMLSEC_SHARED_LIBS}" \
+	  -D CMAKE_PREFIX_PATH="${distro_dir}" \
+	  -D CMAKE_INSTALL_PREFIX="${libxml2_output_dir}" \
+	  -D LIBXML2_WITH_ICONV=OFF \
+	  -D LIBXML2_WITH_PYTHON=OFF \
+	  -D LIBXML2_WITH_ZLIB=OFF \
+      -D LIBXML2_WITH_TESTS=OFF
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
 
   echo "*** Building \"${full_name}\" ..."
-  nmake >> "${LOG_FILE}"
+  cmake --build "${CMAKE_XMLSEC_BUILDDIR}" --config "${CMAKE_XMLSEC_CONFIG}" >> "${LOG_FILE}"
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
 
   echo "*** Installing \"${full_name}\" ..."
-  nmake install >> "${LOG_FILE}"
+  cmake --install "${CMAKE_XMLSEC_BUILDDIR}" --config "${CMAKE_XMLSEC_CONFIG}" >> "${LOG_FILE}"
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
 
   echo "*** Done with \"${full_name}\"!!!"
   return 0
@@ -93,14 +117,30 @@ function build_libxslt {
   tar xvfz "${full_name}.tar.gz" 2>> "${LOG_FILE}"
 
   echo "*** Configuring \"${full_name}\" ..."
-  cd "${full_name}\win32"
-  cscript configure.js iconv=no zlib=no cruntime=/MD prefix="${libxslt_output_dir}" include="${libxml2_output_dir}\include\libxml2" lib="${libxml2_output_dir}\lib"
+
+  cd "${full_name}"  
+  cmake -B "${CMAKE_XMLSEC_BUILDDIR}" -A "${CMAKE_XMLSEC_ARCH}" -G "${CMAKE_XMLSEC_GENERATOR}" \
+	  -D CMAKE_MSVC_RUNTIME_LIBRARY="${CMAKE_XMLSEC_RUNTIME}" \
+	  -D BUILD_SHARED_LIBS="${CMAKE_XMLSEC_SHARED_LIBS}" \
+	  -D CMAKE_PREFIX_PATH="${distro_dir}" \
+	  -D CMAKE_INSTALL_PREFIX="${libxslt_output_dir}" \
+	  -D LIBXSLT_WITH_PYTHON=OFF \
+      -D LIBXSLT_WITH_TESTS=OFF
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
 
   echo "*** Building \"${full_name}\" ..."
-  nmake >> "${LOG_FILE}"
+  cmake --build "${CMAKE_XMLSEC_BUILDDIR}" --config "${CMAKE_XMLSEC_CONFIG}" >> "${LOG_FILE}"
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
 
   echo "*** Installing \"${full_name}\" ..."
-  nmake install >> "${LOG_FILE}"
+  cmake --install "${CMAKE_XMLSEC_BUILDDIR}" --config "${CMAKE_XMLSEC_CONFIG}" >> "${LOG_FILE}"
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
 
   echo "*** Done with \"${full_name}\"!!!"
   return 0
@@ -139,12 +179,21 @@ function build_openssl {
   cd "${full_name}"
   perl Configure no-unit-test --prefix="${openssl_output_dir}" --release VC-WIN64A
   PATH="$OLD_PATH"
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
 
   echo "*** Building \"${full_name}\" ..."
   nmake >> "${LOG_FILE}"
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
 
   echo "*** Installing \"${full_name}\" ..."
   nmake install_sw >> "${LOG_FILE}"
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
 
   echo "*** Done with \"${full_name}\"!!!"
   return 0
@@ -181,14 +230,26 @@ function build_xmlsec {
 
   echo "*** Configuring \"${full_name}\" ..."
   cd "${full_name_without_rc}\win32"
-  cscript configure.js pedantic=yes werror=yes with-dl=yes cruntime=/MD xslt=yes crypto=openssl,mscng unicode=yes prefix="${xmlsec_output_dir}" include="${libxml2_output_dir}\include;${libxml2_output_dir}\include\libxml2;${libxslt_output_dir}\include;${openssl_output_dir}\include" lib="${libxml2_output_dir}\lib;${libxslt_output_dir}\lib;${openssl_output_dir}\lib"
-
+  cscript configure.js pedantic=yes werror=yes static=no cruntime=/MD unicode=yes \
+    xslt=yes crypto=openssl,mscng \
+    prefix="${xmlsec_output_dir}" \
+    include="${libxml2_output_dir}\include;${libxml2_output_dir}\include\libxml2;${libxslt_output_dir}\include;${openssl_output_dir}\include" \
+    lib="${libxml2_output_dir}\lib;${libxslt_output_dir}\lib;${openssl_output_dir}\lib"
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
 
   echo "*** Building \"${full_name}\" ..."
   nmake >> "${LOG_FILE}"
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
 
   echo "*** Installing \"${full_name}\" ..."
   nmake install >> "${LOG_FILE}"
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
 
   echo "*** Done with \"${full_name}\"!!!"
   return 0
@@ -219,12 +280,36 @@ function create_distro {
 rm "${LOG_FILE}"
 echo "*** LOG FILE: \"${LOG_FILE}\""
 
-build_libxml2
-build_libxslt
-build_openssl
-build_xmlsec
-create_readme
-create_distro
+if [ "z$1" = "zcleanup" ] ; then
+  echo "*** CLEANUP ..."
+  rm -rf "${libxml2_output_dir}" "${libxslt_output_dir}" "${openssl_output_dir}" "${xmlsec_output_dir}"
+else
+  echo "*** BUILD ..."
+  build_libxml2
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
+  build_libxslt
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
+  build_openssl
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
+  build_xmlsec
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
+  create_readme
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
+  create_distro
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
+fi
 
 exit 0
 

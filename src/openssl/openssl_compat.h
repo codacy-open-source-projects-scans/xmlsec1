@@ -7,6 +7,7 @@
 #ifndef __XMLSEC_OPENSSL_OPENSSL_COMPAT_H__
 #define __XMLSEC_OPENSSL_OPENSSL_COMPAT_H__
 
+#include <openssl/crypto.h>
 #include <openssl/rand.h>
 
 #include "../cast_helpers.h"
@@ -14,10 +15,10 @@
 
 /******************************************************************************
  *
- * boringssl compatibility
+ * boringssl and aws-lc compatibility
  *
  *****************************************************************************/
-#ifdef OPENSSL_IS_BORINGSSL
+#if defined(OPENSSL_IS_BORINGSSL) || defined(OPENSSL_IS_AWSLC)
 
 /* Not implemented by LibreSSL (yet?) */
 #define XMLSEC_OPENSSL_NO_ASN1_TIME_TO_TM   1
@@ -37,7 +38,7 @@
 #define RAND_write_file(file)               (0)
 
 #define EVP_PKEY_base_id(pkey)              EVP_PKEY_id(pkey)
-#define EVP_CipherFinal(ctx, out, out_len)  EVP_CipherFinal_ex(ctx, out, out_len)
+#define EVP_CipherFinal(ctx, out, out_len)  EVP_CipherFinal_ex((ctx), (out), (out_len))
 #define EVP_read_pw_string(...)             (-1)
 
 #define X509_get0_pubkey(cert)              X509_get_pubkey((cert))
@@ -48,6 +49,69 @@
 #define sk_X509_CRL_reserve(crls, num)      (1)
 
 #endif /* OPENSSL_IS_BORINGSSL */
+
+
+/* BoringSSL redefines int->size_t or int->unsigned */
+#if defined(OPENSSL_IS_BORINGSSL) || defined(OPENSSL_IS_AWSLC)
+
+/* when BoringSSL replaced int with unisgned */
+typedef unsigned xmlSecOpenSSLUInt;
+
+#define XMLSEC_OPENSSL_SAFE_CAST_UINT_TO_SIZE(srcVal, dstVal, errorAction, errorObject) \
+       XMLSEC_SAFE_CAST_UINT_TO_SIZE((srcVal), (dstVal), errorAction, (errorObject))
+
+#define XMLSEC_OPENSSL_SAFE_CAST_SIZE_TO_UINT(srcVal, dstVal, errorAction, errorObject) \
+       XMLSEC_SAFE_CAST_SIZE_TO_UINT((srcVal), (dstVal), errorAction, (errorObject))
+
+#define XMLSEC_OPENSSL_SAFE_CAST_UINT_TO_BYTE(srcVal, dstVal, errorAction, errorObject) \
+       XMLSEC_SAFE_CAST_UINT_TO_BYTE((srcVal), (dstVal), errorAction, (errorObject))
+
+/* when BoringSSL replaced int with size_t */
+typedef size_t xmlSecOpenSSLSizeT;
+
+#define XMLSEC_OPENSSL_SAFE_CAST_SIZE_T_TO_SIZE(srcVal, dstVal, errorAction, errorObject)  \
+       (dstVal) = (srcVal)
+
+#define XMLSEC_OPENSSL_SAFE_CAST_SIZE_TO_SIZE_T(srcVal, dstVal, errorAction, errorObject) \
+       (dstVal) = (srcVal)
+
+#define XMLSEC_OPENSSL_SAFE_CAST_SIZE_T_TO_UINT(srcVal, dstVal, errorAction, errorObject) \
+       XMLSEC_SAFE_CAST_SIZE_T_TO_UINT((srcVal), (dstVal), errorAction, (errorObject))
+
+#define XMLSEC_OPENSSL_SAFE_CAST_SIZE_T_TO_INT(srcVal, dstVal, errorAction, errorObject) \
+       XMLSEC_SAFE_CAST_SIZE_T_TO_INT((srcVal), (dstVal), errorAction, (errorObject))
+
+#else /* defined(OPENSSL_IS_BORINGSSL) */
+
+/* when BoringSSL replaced int with unisgned */
+typedef int xmlSecOpenSSLUInt;
+
+#define XMLSEC_OPENSSL_SAFE_CAST_UINT_TO_SIZE(srcVal, dstVal, errorAction, errorObject) \
+       XMLSEC_SAFE_CAST_INT_TO_SIZE((srcVal), (dstVal), errorAction, (errorObject))
+
+#define XMLSEC_OPENSSL_SAFE_CAST_SIZE_TO_UINT(srcVal, dstVal, errorAction, errorObject) \
+       XMLSEC_SAFE_CAST_SIZE_TO_INT((srcVal), (dstVal), errorAction, (errorObject))
+
+#define XMLSEC_OPENSSL_SAFE_CAST_UINT_TO_BYTE(srcVal, dstVal, errorAction, errorObject) \
+       XMLSEC_SAFE_CAST_INT_TO_BYTE((srcVal), (dstVal), errorAction, (errorObject))
+
+/* when BoringSSL replaced int with size_t */
+typedef int xmlSecOpenSSLSizeT;
+
+#define XMLSEC_OPENSSL_SAFE_CAST_SIZE_T_TO_SIZE(srcVal, dstVal, errorAction, errorObject) \
+       XMLSEC_SAFE_CAST_INT_TO_SIZE((srcVal), (dstVal), errorAction, (errorObject))
+
+#define XMLSEC_OPENSSL_SAFE_CAST_SIZE_TO_SIZE_T(srcVal, dstVal, errorAction, errorObject) \
+       XMLSEC_SAFE_CAST_SIZE_TO_INT((srcVal), (dstVal), errorAction, (errorObject))
+
+#define XMLSEC_OPENSSL_SAFE_CAST_SIZE_T_TO_UINT(srcVal, dstVal, errorAction, errorObject) \
+       XMLSEC_SAFE_CAST_INT_TO_UINT((srcVal), (dstVal), errorAction, (errorObject))
+
+#define XMLSEC_OPENSSL_SAFE_CAST_SIZE_T_TO_INT(srcVal, dstVal, errorAction, errorObject) \
+       (dstVal) = (srcVal)
+
+#endif /* defined(OPENSSL_IS_BORINGSSL) */
+
 
 /******************************************************************************
  *
@@ -78,7 +142,6 @@
 #endif /* (LIBRESSL_VERSION_NUMBER < 0x3070200fL) */
 
 #endif /* defined(LIBRESSL_VERSION_NUMBER) */
-
 
 /******************************************************************************
  *
@@ -113,8 +176,8 @@
 
 #define RAND_priv_bytes_ex(ctx,buf,num,strength)                    xmlSecOpenSSLCompatRand((buf),(num))
 static inline int xmlSecOpenSSLCompatRand(unsigned char *buf, xmlSecSize size) {
-    int num;
-    XMLSEC_SAFE_CAST_SIZE_TO_INT(size, num, return(0), NULL);
+    xmlSecOpenSSLSizeT num;
+    XMLSEC_OPENSSL_SAFE_CAST_SIZE_TO_SIZE_T(size, num, return(0), NULL);
     return(RAND_priv_bytes(buf, num));
 }
 

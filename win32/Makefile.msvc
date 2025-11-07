@@ -43,7 +43,6 @@ AUTOCONF = .\configure.txt
 #WITH_MSCNG=0
 #WITH_LIBXSLT=1
 #STATIC = 0
-#WITH_DL = 1
 #WERROR = 0
 #PEDANTIC = 1
 #PREFIX = . # set this to the right value.
@@ -60,12 +59,14 @@ AUTOCONF = .\configure.txt
 #
 # Names of various input and output components.
 #
-!if "$(WITH_DL)" == "1"
-APP_NAME 		= xmlsec.exe
+!if "$(STATIC)" == "1"
+APP_NAME = xmlseca.exe
+UNIT_TESTS_APP_NAME = xmlsec_unit_testsa.exe
 !else
-APP_NAME 		= xmlseca.exe
+APP_NAME = xmlsec.exe
+UNIT_TESTS_APP_NAME = xmlsec_unit_tests.exe
 !endif
-APP_NAME_MANIFEST	= $(APP_NAME).manifest
+APP_NAME_MANIFEST = $(APP_NAME).manifest
 
 XMLSEC_NAME 		= xmlsec
 XMLSEC_BASENAME 	= lib$(XMLSEC_NAME)
@@ -140,13 +141,22 @@ XMLSEC_MSCNG_SRCDIR  = $(XMLSEC_SRCDIR)\mscng
 # Object files for libraries and apps.
 #
 XMLSEC_APPS_OBJS = \
-	$(XMLSEC_APPS_INTDIR)\crypto.obj\
-	$(XMLSEC_APPS_INTDIR)\cmdline.obj\
+	$(XMLSEC_APPS_INTDIR)\crypto.obj \
+	$(XMLSEC_APPS_INTDIR)\cmdline.obj \
 	$(XMLSEC_APPS_INTDIR)\xmlsec.obj
 XMLSEC_APPS_OBJS_A = \
-	$(XMLSEC_APPS_INTDIR_A)\crypto.obj\
-	$(XMLSEC_APPS_INTDIR_A)\cmdline.obj\
+	$(XMLSEC_APPS_INTDIR_A)\crypto.obj \
+	$(XMLSEC_APPS_INTDIR_A)\cmdline.obj \
 	$(XMLSEC_APPS_INTDIR_A)\xmlsec.obj
+
+XMLSEC_UNIT_TESTS_OBJS = \
+	$(XMLSEC_APPS_INTDIR)\unit_tests\base64_unit_tests.obj \
+	$(XMLSEC_APPS_INTDIR)\unit_tests\x509_unit_tests.obj \
+	$(XMLSEC_APPS_INTDIR)\unit_tests\xmlsec_unit_tests.obj
+XMLSEC_UNIT_TESTS_OBJS_A = \
+	$(XMLSEC_APPS_INTDIR_A)\unit_tests\base64_unit_tests.obj \
+	$(XMLSEC_APPS_INTDIR_A)\unit_tests\x509_unit_tests.obj \
+	$(XMLSEC_APPS_INTDIR_A)\unit_tests\xmlsec_unit_tests.obj
 
 XMLSEC_OBJS = \
 	$(XMLSEC_INTDIR)\app.obj\
@@ -176,7 +186,8 @@ XMLSEC_OBJS = \
 	$(XMLSEC_INTDIR)\xmlsec.obj \
 	$(XMLSEC_INTDIR)\xmltree.obj \
 	$(XMLSEC_INTDIR)\xpath.obj \
-	$(XMLSEC_INTDIR)\xslt.obj
+	$(XMLSEC_INTDIR)\xslt.obj \
+	$(XMLSEC_INTDIR)\x509.obj
 XMLSEC_OBJS_A = \
 	$(XMLSEC_INTDIR_A)\app.obj\
 	$(XMLSEC_INTDIR_A)\base64.obj\
@@ -205,7 +216,8 @@ XMLSEC_OBJS_A = \
 	$(XMLSEC_INTDIR_A)\xmlsec.obj \
 	$(XMLSEC_INTDIR_A)\xmltree.obj \
 	$(XMLSEC_INTDIR_A)\xpath.obj \
-	$(XMLSEC_INTDIR_A)\xslt.obj
+	$(XMLSEC_INTDIR_A)\xslt.obj \
+	$(XMLSEC_INTDIR_A)\x509.obj
 
 XMLSEC_OPENSSL_OBJS = \
 	$(XMLSEC_OPENSSL_INTDIR)\app.obj\
@@ -449,14 +461,14 @@ CFLAGS = $(CFLAGS) /DXMLSEC_NO_XSLT=1
 !endif
 
 CFLAGS = $(CFLAGS) /D "XMLSEC_DEFAULT_CRYPTO=\"$(XMLSEC_DEFAULT_CRYPTO)\""
-!if "$(WITH_DL)" == "1"
-CFLAGS = $(CFLAGS) /D "XMLSEC_DL_WIN32"
-APP_CFLAGS = $(APP_CFLAGS) /D "XMLSEC_CRYPTO_DYNAMIC_LOADING"
-!else
+!if "$(STATIC)" == "1"
 CFLAGS 	= $(CFLAGS) /D "XMLSEC_NO_CRYPTO_DYNAMIC_LOADING"
 APP_CFLAGS = $(APP_CFLAGS) $(XMLSEC_CRYPTO_CFLAGS)
 # this disables TEMPLATE tests and helps with missing algorithms (hmac) in mscrypto
 APP_CFLAGS = $(APP_CFLAGS) /D "XMLSEC_NO_TMPL_TEST"
+!else
+CFLAGS = $(CFLAGS) /D "XMLSEC_DL_WIN32"
+APP_CFLAGS = $(APP_CFLAGS) /D "XMLSEC_CRYPTO_DYNAMIC_LOADING"
 !endif
 
 XMLSEC_OPENSSL_CFLAGS   = /D "XMLSEC_CRYPTO_OPENSSL" /D "XMLSEC_DEFAULT_CRYPTO=\"openssl\""
@@ -491,7 +503,7 @@ LDFLAGS = $(LDFLAGS) /WX
 !endif
 
 SOLIBS 			= $(LIBS) libxml2.lib bcrypt.lib ws2_32.lib
-ALIBS           = $(LIBS) libxml2_a.lib bcrypt.lib ws2_32.lib
+ALIBS           = $(LIBS) libxml2s.lib bcrypt.lib ws2_32.lib
 
 !if "$(WITH_ICONV)" == "1"
 CFLAGS          = $(CFLAGS) /D "LIBXML_ICONV_ENABLED"
@@ -501,13 +513,7 @@ ALIBS 			= $(ALIBS) iconv_a.lib
 
 !if "$(WITH_LIBXSLT)" == "1"
 SOLIBS 			= $(SOLIBS) libxslt.lib
-ALIBS 			= $(ALIBS) libxslt_a.lib
-!endif
-
-!if "$(WITH_DL)" == "1"
-APP_LIBS  		= $(SOLIBS) $(XMLSEC_CRYPTO_SOLIBS)
-!else
-APP_LIBS  		= $(ALIBS) $(XMLSEC_CRYPTO_ALIBS)
+ALIBS 			= $(ALIBS) libxslts.lib
 !endif
 
 XMLSEC_OPENSSL_SOLIBS   = libcrypto.lib wsock32.lib kernel32.lib user32.lib gdi32.lib crypt32.lib advapi32.lib ws2_32.lib
@@ -590,58 +596,64 @@ XMLSEC_OPENSSL_TEST_CONFIG =
 !endif
 
 !if "$(STATIC)" == "1"
-EXTRA_ALL_TARGETS=xmlseca
-EXTRA_OPENSSL_TARGETS=openssla
-EXTRA_NSS_TARGETS=nssa
-EXTRA_MSCNG_TARGETS=mscnga
-EXTRA_MSCRYPTO_TARGETS=mscryptoa
+APP_LIBS=$(ALIBS) $(XMLSEC_CRYPTO_ALIBS)
+XMLSEC_APP_TARGETS=xmlseca
+XMLSEC_OPENSSL_TARGETS=openssla
+XMLSEC_NSS_TARGETS=nssa
+XMLSEC_MSCNG_TARGETS=mscnga
+XMLSEC_MSCRYPTO_TARGETS=mscryptoa
 !else
-EXTRA_ALL_TARGETS=
-EXTRA_OPENSSL_TARGETS=
-EXTRA_NSS_TARGETS=
-EXTRA_MSCNG_TARGETS=
-EXTRA_MSCRYPTO_TARGETS=
+APP_LIBS=$(SOLIBS) $(XMLSEC_CRYPTO_SOLIBS)
+XMLSEC_APP_TARGETS=xmlsec
+XMLSEC_OPENSSL_TARGETS=openssl
+XMLSEC_NSS_TARGETS=nss
+XMLSEC_MSCNG_TARGETS=mscng
+XMLSEC_MSCRYPTO_TARGETS=mscrypto
 !endif
-
 
 EXTRA_CRYPTO_TARGETS =
 !if "$(WITH_OPENSSL)" == "1"
-EXTRA_CRYPTO_TARGETS = $(EXTRA_CRYPTO_TARGETS) openssl $(EXTRA_OPENSSL_TARGETS)
+EXTRA_CRYPTO_TARGETS = $(EXTRA_CRYPTO_TARGETS) $(XMLSEC_OPENSSL_TARGETS)
 !endif
 !if "$(WITH_NSS)" == "1"
-EXTRA_CRYPTO_TARGETS = $(EXTRA_CRYPTO_TARGETS) nss $(EXTRA_NSS_TARGETS)
+EXTRA_CRYPTO_TARGETS = $(EXTRA_CRYPTO_TARGETS) $(XMLSEC_NSS_TARGETS)
 !endif
 !if "$(WITH_MSCNG)" == "1"
-EXTRA_CRYPTO_TARGETS = $(EXTRA_CRYPTO_TARGETS) mscng $(EXTRA_MSCNG_TARGETS)
+EXTRA_CRYPTO_TARGETS = $(EXTRA_CRYPTO_TARGETS) $(XMLSEC_MSCNG_TARGETS)
 !endif
 !if "$(WITH_MSCRYPTO)" == "1"
-EXTRA_CRYPTO_TARGETS = $(EXTRA_CRYPTO_TARGETS) mscrypto $(EXTRA_MSCRYPTO_TARGETS)
+EXTRA_CRYPTO_TARGETS = $(EXTRA_CRYPTO_TARGETS) $(XMLSEC_MSCRYPTO_TARGETS)
 !endif
 
 #
 # Build rules
 #
 
-all: apps $(EXTRA_ALL_TARGETS) $(EXTRA_CRYPTO_TARGETS)
+all: apps $(XMLSEC_APP_TARGETS) $(EXTRA_CRYPTO_TARGETS)
 
-apps: $(BINDIR)\$(APP_NAME)
+apps: $(BINDIR)\$(APP_NAME) $(BINDIR)\$(UNIT_TESTS_APP_NAME)
 
-xmlseca:  $(XMLSEC_APPS_INTDIR_A) $(BINDIR)\$(XMLSEC_A) $(XMLSEC_DEFAULT_CRYPTO_A)
-xmlsec: $(XMLSEC_APPS_INTDIR) $(BINDIR)\$(XMLSEC_SO) $(XMLSEC_DEFAULT_CRYPTO)
+xmlseca: $(BINDIR)\$(XMLSEC_A) $(XMLSEC_DEFAULT_CRYPTO_A)
+xmlsec: $(BINDIR)\$(XMLSEC_SO) $(XMLSEC_DEFAULT_CRYPTO)
 
 openssla: $(BINDIR)\$(XMLSEC_OPENSSL_A)
-openssl: $(BINDIR)\$(XMLSEC_OPENSSL_SO) $(EXTRA_OPENSSL_TARGETS)
+openssl: $(BINDIR)\$(XMLSEC_OPENSSL_SO)
 
 nssa: $(BINDIR)\$(XMLSEC_NSS_A)
-nss: $(BINDIR)\$(XMLSEC_NSS_SO) $(EXTRA_NSS_TARGETS)
+nss: $(BINDIR)\$(XMLSEC_NSS_SO) $(XMLSEC_NSS_TARGETS)
 
 mscryptoa: $(BINDIR)\$(XMLSEC_MSCRYPTO_A)
-mscrypto: $(BINDIR)\$(XMLSEC_MSCRYPTO_SO) $(EXTRA_MSCRYPTO_TARGETS)
+mscrypto: $(BINDIR)\$(XMLSEC_MSCRYPTO_SO)
 
 mscnga: $(BINDIR)\$(XMLSEC_MSCNG_A)
-mscng: $(BINDIR)\$(XMLSEC_MSCNG_SO) $(EXTRA_MSCNG_TARGETS)
+mscng: $(BINDIR)\$(XMLSEC_MSCNG_SO)
 
-check : check-keys check-dsig check-enc
+check : check-unit-tests check-keys check-dsig check-enc
+
+check-unit-tests : $(BINDIR)\$(UNIT_TESTS_APP_NAME)
+	cd ..
+	win32\$(BINDIR)\$(UNIT_TESTS_APP_NAME)
+	cd win32
 
 check-keys : $(BINDIR)\$(APP_NAME)
 	cd ..
@@ -781,8 +793,12 @@ $(BINDIR) :
 #
 $(XMLSEC_APPS_INTDIR) :
 	if not exist $(XMLSEC_APPS_INTDIR) mkdir $(XMLSEC_APPS_INTDIR)
+$(XMLSEC_APPS_INTDIR)\unit_tests : $(XMLSEC_APPS_INTDIR)
+	if not exist $(XMLSEC_APPS_INTDIR)\unit_tests mkdir $(XMLSEC_APPS_INTDIR)\unit_tests
 $(XMLSEC_APPS_INTDIR_A) :
 	if not exist $(XMLSEC_APPS_INTDIR_A) mkdir $(XMLSEC_APPS_INTDIR_A)
+$(XMLSEC_APPS_INTDIR_A)\unit_tests : $(XMLSEC_APPS_INTDIR_A)
+	if not exist $(XMLSEC_APPS_INTDIR_A)\unit_tests mkdir $(XMLSEC_APPS_INTDIR_A)\unit_tests
 
 $(XMLSEC_INTDIR) :
 	if not exist $(XMLSEC_INTDIR) mkdir $(XMLSEC_INTDIR)
@@ -814,6 +830,8 @@ $(XMLSEC_MSCNG_INTDIR_A) :
 #
 {$(APPS_SRCDIR)}.c{$(XMLSEC_APPS_INTDIR)}.obj::
 	$(CC) $(CFLAGS) $(APP_CFLAGS) /Fo$(XMLSEC_APPS_INTDIR)\ /c $<
+{$(APPS_SRCDIR)\unit_tests}.c{$(XMLSEC_APPS_INTDIR)\unit_tests}.obj::
+	$(CC) $(CFLAGS) $(APP_CFLAGS) /Fo$(XMLSEC_APPS_INTDIR)\unit_tests\ /c $<
 
 {$(XMLSEC_SRCDIR)}.c{$(XMLSEC_INTDIR)}.obj::
 	$(CC) $(CFLAGS) /Fo$(XMLSEC_INTDIR)\ /c $<
@@ -844,6 +862,9 @@ $(XMLSEC_MSCNG_INTDIR_A) :
 {$(APPS_SRCDIR)}.c{$(XMLSEC_APPS_INTDIR_A)}.obj::
 	$(CC) /D "LIBXML_STATIC" /D "LIBXSLT_STATIC" /D "XMLSEC_STATIC" \
 		$(CFLAGS) $(APP_CFLAGS) /Fo$(XMLSEC_APPS_INTDIR_A)\ /c $<
+{$(APPS_SRCDIR)\unit_tests}.c{$(XMLSEC_APPS_INTDIR_A)\unit_tests}.obj::
+	$(CC) /D "LIBXML_STATIC" /D "LIBXSLT_STATIC" /D "XMLSEC_STATIC" \
+		$(CFLAGS) $(APP_CFLAGS) /Fo$(XMLSEC_APPS_INTDIR_A)\unit_tests\ /c $<
 
 {$(XMLSEC_SRCDIR)}.c{$(XMLSEC_INTDIR_A)}.obj::
 	$(CC) /D "LIBXML_STATIC" /D "LIBXSLT_STATIC" /D "XMLSEC_STATIC" \
@@ -936,11 +957,15 @@ $(BINDIR)\$(XMLSEC_MSCNG_A) : $(BINDIR) $(BINDIR)\$(XMLSEC_A) $(XMLSEC_MSCNG_OBJ
 #
 # An implicit rule for xmlsec command line tool
 #
-$(BINDIR)\xmlseca.exe: xmlseca $(BINDIR) $(XMLSEC_APPS_OBJS_A)
+$(BINDIR)\xmlseca.exe: xmlseca $(XMLSEC_APPS_INTDIR_A) $(BINDIR) $(XMLSEC_APPS_OBJS_A)
 	$(LD) $(LDFLAGS) /OUT:$@ $(XMLSEC_A) $(XMLSEC_CRYPTO_A) $(APP_LIBS) $(XMLSEC_APPS_OBJS_A)
-$(BINDIR)\xmlsec.exe: xmlsec $(BINDIR) $(XMLSEC_APPS_OBJS)
+$(BINDIR)\xmlsec.exe: xmlsec $(XMLSEC_APPS_INTDIR) $(BINDIR) $(XMLSEC_APPS_OBJS)
 	$(LD) $(LDFLAGS) /OUT:$@ $(XMLSEC_IMP) $(XMLSEC_CRYPTO_IMP) $(APP_LIBS) $(XMLSEC_APPS_OBJS)
 
+$(BINDIR)\xmlsec_unit_testsa.exe: xmlseca $(XMLSEC_APPS_INTDIR_A)\unit_tests $(BINDIR) $(XMLSEC_UNIT_TESTS_OBJS_A)
+	$(LD) $(LDFLAGS) /OUT:$@ $(XMLSEC_A) $(XMLSEC_CRYPTO_A) $(APP_LIBS) $(XMLSEC_UNIT_TESTS_OBJS_A)
+$(BINDIR)\xmlsec_unit_tests.exe: xmlsec $(XMLSEC_APPS_INTDIR)\unit_tests $(BINDIR) $(XMLSEC_UNIT_TESTS_OBJS)
+	$(LD) $(LDFLAGS) /OUT:$@ $(XMLSEC_IMP) $(XMLSEC_CRYPTO_IMP) $(APP_LIBS) $(XMLSEC_UNIT_TESTS_OBJS)
 
 # This is a target for me, to make a binary distribution. Not for the public use,
 # keep your hands off :-)

@@ -12,6 +12,7 @@ if XMLSEC_DOCS
 SUBDIRS += docs
 endif
 TEST_APP 	    = apps/xmlsec1$(EXEEXT)
+UNIT_TEST_APP 	= apps/xmlsec_unit_tests$(EXEEXT)
 DEFAULT_CRYPTO	= @XMLSEC_DEFAULT_CRYPTO@
 
 bin_SCRIPTS 	= xmlsec1-config
@@ -105,7 +106,10 @@ docs-man:
 
 check: check-all check-info
 
-check-all: $(TEST_APP)
+check-unit-tests: $(UNIT_TEST_APP)
+	@($(PRECHECK_COMMANDS) && $(ABS_BUILDDIR)/$(UNIT_TEST_APP))
+
+check-all: $(TEST_APP) check-unit-tests
 	for crypto in $(CHECK_CRYPTO_LIST) ; do \
 		make check-crypto-$$crypto || exit 1 ; \
 	done
@@ -173,13 +177,13 @@ check-enc: $(TEST_APP)
 	)
 
 memcheck-res:
-	@grep -i 'ERROR SUMMARY' /tmp/*.log | sed 's/.*==.*== *//' | sort -u
-	@grep -i 'in use at exit' /tmp/*.log | sed 's/.*==.*== *//' | sort -u
-	@grep -i 'definitely lost:' /tmp/*.log | sed 's/.*==.*== *//' | sort -u
-	@grep -i 'indirectly lost:' /tmp/*.log | sed 's/.*==.*== *//' | sort -u
-	@grep -i 'possibly lost:' /tmp/*.log | sed 's/.*==.*== *//' | sort -u
-	@grep -i 'still reachable:' /tmp/*.log | sed 's/.*==.*== *//' | sort -u
-	@grep -i 'used_suppression:' /tmp/*.log | sed 's/.*--.*-- *//' | sort -u
+	@grep -i 'ERROR SUMMARY' /tmp/xmlsec-test*/*.log | sed 's/.*==.*== *//' | sort -u
+	@grep -i 'in use at exit' /tmp/xmlsec-test*/*.log | sed 's/.*==.*== *//' | sort -u
+	@grep -i 'definitely lost:' /tmp/xmlsec-test*/*.log | sed 's/.*==.*== *//' | sort -u
+	@grep -i 'indirectly lost:' /tmp/xmlsec-test*/*.log | sed 's/.*==.*== *//' | sort -u
+	@grep -i 'possibly lost:' /tmp/xmlsec-test*/*.log | sed 's/.*==.*== *//' | sort -u
+	@grep -i 'still reachable:' /tmp/xmlsec-test*/*.log | sed 's/.*==.*== *//' | sort -u
+	@grep -i 'used_suppression:' /tmp/xmlsec-test*/*.log | sed 's/.*--.*-- *//' | sort -u
 
 memcheck: $(TEST_APP)
 	@(export DEBUG_MEMORY=1 && $(MAKE) check && $(MAKE) memcheck-res)

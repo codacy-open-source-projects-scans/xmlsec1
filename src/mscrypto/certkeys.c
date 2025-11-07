@@ -1038,7 +1038,7 @@ static xmlSecKeyDataKlass xmlSecMSCryptoKeyDataRsaKlass = {
     /* get info */
     xmlSecMSCryptoKeyDataRsaGetType,            /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecMSCryptoKeyDataRsaGetSize,            /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                                       /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                                       /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecMSCryptoKeyDataRsaXmlRead,            /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -1135,7 +1135,7 @@ xmlSecMSCryptoKeyDataRsaXmlWrite(xmlSecKeyDataId id, xmlSecKeyPtr key,
 
 static int
 xmlSecMSCryptoKeyDataRsaGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits,
-                                xmlSecKeyDataType type ATTRIBUTE_UNUSED) {
+                                xmlSecKeyDataType type XMLSEC_ATTRIBUTE_UNUSED) {
     xmlSecMSCryptoKeyDataCtxPtr ctx;
     HCRYPTPROV hProv = 0;
     HCRYPTKEY hKey = 0;
@@ -1376,7 +1376,7 @@ done:
 
 static int
 xmlSecMSCryptoKeyDataRsaWrite(xmlSecKeyDataId id, xmlSecKeyDataPtr data,
-    xmlSecKeyValueRsaPtr rsaValue, int writePrivateKey ATTRIBUTE_UNUSED) {
+    xmlSecKeyValueRsaPtr rsaValue, int writePrivateKey XMLSEC_ATTRIBUTE_UNUSED) {
 
     xmlSecMSCryptoKeyDataCtxPtr ctx;
     xmlSecBuffer buf;
@@ -1575,7 +1575,8 @@ done:
  * ============================================================================
  *
  * To support reading/writing private keys an X element added (before Y).
- * todo: The current implementation does not support Seed and PgenCounter!
+ *
+ * The current implementation does not support Seed and PgenCounter!
  * by this the P, Q and G are *required*!
  *
  *************************************************************************/
@@ -1631,7 +1632,7 @@ static xmlSecKeyDataKlass xmlSecMSCryptoKeyDataDsaKlass = {
     /* get info */
     xmlSecMSCryptoKeyDataDsaGetType,    /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecMSCryptoKeyDataDsaGetSize,    /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                               /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                               /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     xmlSecMSCryptoKeyDataDsaXmlRead,    /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -1725,7 +1726,7 @@ xmlSecMSCryptoKeyDataDsaXmlWrite(xmlSecKeyDataId id, xmlSecKeyPtr key,
 }
 
 static int
-xmlSecMSCryptoKeyDataDsaGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type ATTRIBUTE_UNUSED) {
+xmlSecMSCryptoKeyDataDsaGenerate(xmlSecKeyDataPtr data, xmlSecSize sizeBits, xmlSecKeyDataType type XMLSEC_ATTRIBUTE_UNUSED) {
     xmlSecMSCryptoKeyDataCtxPtr ctx;
     HCRYPTPROV hProv = 0;
     HCRYPTKEY hKey = 0;
@@ -1948,8 +1949,6 @@ xmlSecMSCryptoKeyDataDsaRead(xmlSecKeyDataId id, xmlSecKeyValueDsaPtr dsaValue) 
     memcpy(buf, xmlSecBufferGetData(&(dsaValue->y)), ySize);
     buf += pSize; /* ySize <= pSize */
 
-    /* todo: add support for J, seed, pgencounter */
-
     /* Set seed to 0xFFFFFFFFF */
     seed = (DSSSEED*)buf;
     memset(seed, 0, sizeof(*seed));
@@ -2006,7 +2005,7 @@ done:
 static int
 xmlSecMSCryptoKeyDataDsaWrite(xmlSecKeyDataId id, xmlSecKeyDataPtr data,
                               xmlSecKeyValueDsaPtr dsaValue,
-                              int writePrivateKey ATTRIBUTE_UNUSED)  {
+                              int writePrivateKey XMLSEC_ATTRIBUTE_UNUSED)  {
     xmlSecMSCryptoKeyDataCtxPtr ctx;
     xmlSecBuffer buf;
     int bufInitialized = 0;
@@ -2222,7 +2221,7 @@ static xmlSecKeyDataKlass xmlSecMSCryptoKeyDataGost2001Klass = {
     /* get info */
     xmlSecMSCryptoKeyDataGost2001GetType,       /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecMSCryptoKeyDataGost2001GetSize,       /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                               /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                               /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     NULL,       /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -2382,7 +2381,7 @@ static xmlSecKeyDataKlass xmlSecMSCryptoKeyDataGost2012_256Klass = {
     /* get info */
     xmlSecMSCryptoKeyDataGost2012_256GetType,       /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecMSCryptoKeyDataGost2012_256GetSize,       /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                               /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                               /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     NULL,       /* xmlSecKeyDataXmlReadMethod xmlRead; */
@@ -2537,7 +2536,7 @@ static xmlSecKeyDataKlass xmlSecMSCryptoKeyDataGost2012_512Klass = {
     /* get info */
     xmlSecMSCryptoKeyDataGost2012_512GetType,       /* xmlSecKeyDataGetTypeMethod getType; */
     xmlSecMSCryptoKeyDataGost2012_512GetSize,       /* xmlSecKeyDataGetSizeMethod getSize; */
-    NULL,                               /* xmlSecKeyDataGetIdentifier getIdentifier; */
+    NULL,                               /* DEPRECATED xmlSecKeyDataGetIdentifier getIdentifier; */
 
     /* read/write */
     NULL,       /* xmlSecKeyDataXmlReadMethod xmlRead; */

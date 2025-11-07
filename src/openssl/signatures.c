@@ -84,7 +84,7 @@ struct _xmlSecOpenSSLEvpSignatureCtx {
     EVP_MD_CTX*         digestCtx;
     xmlSecKeyDataId     keyId;
     EVP_PKEY*           pKey;
-    xmlSecSize          keySize;
+    xmlSecSize          keySizeBits;
     xmlSecOpenSSLEvpSignatureMode mode;
     int                 rsaPadding;
 };
@@ -101,12 +101,12 @@ static int      xmlSecOpenSSLEvpSignatureDsa_OpenSSL2XmlDSig    (const xmlSecTra
 #endif /* XMLSEC_NO_DSA */
 
 #ifndef XMLSEC_NO_EC
-static int      xmlSecOpenSSLEvpSignatureEcdsa_XmlDSig2OpenSSL  (xmlSecSize keySize,
+static int      xmlSecOpenSSLEvpSignatureEcdsa_XmlDSig2OpenSSL  (xmlSecSize keySizeBits,
                                                                  const xmlSecByte * data,
                                                                  xmlSecSize dataSize,
                                                                  unsigned char ** out,
                                                                  int * outLen);
-static int      xmlSecOpenSSLEvpSignatureEcdsa_OpenSSL2XmlDSig  (xmlSecSize keySize,
+static int      xmlSecOpenSSLEvpSignatureEcdsa_OpenSSL2XmlDSig  (xmlSecSize keySizeBits,
                                                                  xmlSecBufferPtr data);
 #endif /* XMLSEC_NO_EC */
 
@@ -809,8 +809,8 @@ xmlSecOpenSSLEvpSignatureSetKey(xmlSecTransformPtr transform, xmlSecKeyPtr key) 
     xmlSecAssert2(ctx->keyId != NULL, -1);
     xmlSecAssert2(xmlSecKeyCheckId(key, ctx->keyId), -1);
 
-    ctx->keySize = xmlSecKeyGetSize(key);
-    if(ctx->keySize <= 0) {
+    ctx->keySizeBits = xmlSecKeyGetSize(key);
+    if(ctx->keySizeBits <= 0) {
         xmlSecInternalError("xmlSecKeyGetSize", xmlSecTransformGetName(transform));
         return(-1);
     }
@@ -860,6 +860,7 @@ xmlSecOpenSSLEvpSignatureSetKeyReq(xmlSecTransformPtr transform,  xmlSecKeyReqPt
 
 static int
 xmlSecOpenSSLEvpSignatureCalculateDigest(xmlSecTransformPtr transform, xmlSecOpenSSLEvpSignatureCtxPtr ctx, xmlSecByte* dgst, unsigned int* dgstSize) {
+    xmlSecOpenSSLSizeT mdSize;
     unsigned int dgstLen;
     int ret;
 
@@ -869,12 +870,12 @@ xmlSecOpenSSLEvpSignatureCalculateDigest(xmlSecTransformPtr transform, xmlSecOpe
     xmlSecAssert2(dgstSize != NULL, -1);
     xmlSecAssert2((*dgstSize) > 0, -1);
 
-    ret = EVP_MD_size(ctx->digest);
-    if (ret <= 0) {
+    mdSize = EVP_MD_size(ctx->digest);
+    if (mdSize <= 0) {
         xmlSecOpenSSLError("EVP_MD_size", xmlSecTransformGetName(transform));
         return(-1);
     }
-    XMLSEC_SAFE_CAST_INT_TO_UINT(ret, dgstLen,  return(-1), xmlSecTransformGetName(transform));
+    XMLSEC_OPENSSL_SAFE_CAST_SIZE_T_TO_UINT(mdSize, dgstLen,  return(-1), xmlSecTransformGetName(transform));
     xmlSecAssert2(dgstLen > 0, -1);
     xmlSecAssert2(dgstLen <= (*dgstSize), -1);
 
@@ -944,15 +945,16 @@ xmlSecOpenSSLEvpSignatureCreatePkeyCtx(xmlSecTransformPtr transform, xmlSecOpenS
         }
 
         if(ctx->rsaPadding == RSA_PKCS1_PSS_PADDING) {
+            xmlSecOpenSSLSizeT mdSize;
             int saltlen;
 
             /*  The default salt length is the length of the hash function.*/
-            ret = EVP_MD_size(ctx->digest);
-            if (ret <= 0) {
+            mdSize = EVP_MD_size(ctx->digest);
+            if (mdSize <= 0) {
                 xmlSecOpenSSLError("EVP_MD_size", xmlSecTransformGetName(transform));
                 goto error;
             }
-            saltlen = ret;
+            XMLSEC_OPENSSL_SAFE_CAST_SIZE_T_TO_INT(mdSize, saltlen, goto error, xmlSecTransformGetName(transform));
 
             ret = EVP_PKEY_CTX_set_rsa_pss_saltlen(pKeyCtx, saltlen);
             if(ret <= 0) {
@@ -981,8 +983,10 @@ xmlSecOpenSSLEvpSignatureVerify(xmlSecTransformPtr transform,
     xmlSecByte dgst[EVP_MAX_MD_SIZE];
     unsigned int dgstSize = sizeof(dgst);
     EVP_PKEY_CTX *pKeyCtx = NULL;
+#if !defined(XMLSEC_NO_DSA) || !defined(XMLSEC_NO_EC)
     unsigned char * fixedData = NULL;
     int fixedDataLen = 0;
+#endif
     unsigned int dataLen;
     int ret;
     int res = -1;
@@ -999,7 +1003,7 @@ xmlSecOpenSSLEvpSignatureVerify(xmlSecTransformPtr transform,
     xmlSecAssert2(ctx->digest != NULL, -1);
     xmlSecAssert2(ctx->digestCtx != NULL, -1);
     xmlSecAssert2(ctx->pKey != NULL, -1);
-    xmlSecAssert2(ctx->keySize > 0, -1);
+    xmlSecAssert2(ctx->keySizeBits > 0, -1);
 
     /* calculate digest */
     ret = xmlSecOpenSSLEvpSignatureCalculateDigest(transform, ctx, dgst, &dgstSize);
@@ -1035,14 +1039,14 @@ xmlSecOpenSSLEvpSignatureVerify(xmlSecTransformPtr transform,
         ret = EVP_PKEY_verify(pKeyCtx, fixedData, dataLen, dgst, dgstSize);
         break;
 #else  /* XMLSEC_NO_DSA */
-        xmlSecNotImplementedError("DSA signatures are disabled");
+        xmlSecNotImplementedError("DSA signatures support is disabled during compilation");
         goto done;
 #endif /* XMLSEC_NO_DSA */
 
     case xmlSecOpenSSLEvpSignatureMode_Ecdsa:
 #ifndef XMLSEC_NO_EC
         /* convert XMLDSig data to the format expected by OpenSSL */
-        ret =  xmlSecOpenSSLEvpSignatureEcdsa_XmlDSig2OpenSSL(ctx->keySize, data, dataSize, &fixedData, &fixedDataLen);
+        ret =  xmlSecOpenSSLEvpSignatureEcdsa_XmlDSig2OpenSSL(ctx->keySizeBits, data, dataSize, &fixedData, &fixedDataLen);
         if((ret < 0) || (fixedData == NULL) || (fixedDataLen <= 0)) {
             xmlSecInternalError("xmlSecOpenSSLEvpSignatureEcdsa_XmlDSig2OpenSSL", xmlSecTransformGetName(transform));
             goto done;
@@ -1051,7 +1055,7 @@ xmlSecOpenSSLEvpSignatureVerify(xmlSecTransformPtr transform,
         ret = EVP_PKEY_verify(pKeyCtx, fixedData, dataLen, dgst, dgstSize);
         break;
 #else  /* XMLSEC_NO_EC */
-        xmlSecNotImplementedError("DSA signatures are disabled");
+        xmlSecNotImplementedError("DSA signatures support is disabled during compilation");
         goto done;
 #endif /* XMLSEC_NO_EC */
     }
@@ -1073,9 +1077,11 @@ xmlSecOpenSSLEvpSignatureVerify(xmlSecTransformPtr transform,
     res = 0;
 
 done:
+#if !defined(XMLSEC_NO_DSA) || !defined(XMLSEC_NO_EC)
     if(fixedData != NULL) {
         OPENSSL_free(fixedData);
     }
+#endif
     if(pKeyCtx != NULL) {
         EVP_PKEY_CTX_free(pKeyCtx);
     }
@@ -1096,7 +1102,7 @@ xmlSecOpenSSLEvpSignatureSign(xmlSecTransformPtr transform, xmlSecOpenSSLEvpSign
     xmlSecAssert2(transform != NULL, -1);
     xmlSecAssert2(ctx != NULL, -1);
     xmlSecAssert2(ctx->pKey != NULL, -1);
-    xmlSecAssert2(ctx->keySize > 0, -1);
+    xmlSecAssert2(ctx->keySizeBits > 0, -1);
     xmlSecAssert2(out != NULL, -1);
 
     /* calculate digest */
@@ -1161,21 +1167,21 @@ xmlSecOpenSSLEvpSignatureSign(xmlSecTransformPtr transform, xmlSecOpenSSLEvpSign
         }
         break;
 #else  /* XMLSEC_NO_DSA */
-        xmlSecNotImplementedError("DSA signatures are disabled");
+        xmlSecNotImplementedError("DSA signatures support is disabled during compilation");
         goto done;
 #endif /* XMLSEC_NO_DSA */
 
     case xmlSecOpenSSLEvpSignatureMode_Ecdsa:
 #ifndef XMLSEC_NO_EC
         /* convert XMLDSig data to the format expected by OpenSSL */
-        ret =  xmlSecOpenSSLEvpSignatureEcdsa_OpenSSL2XmlDSig(ctx->keySize, out);
+        ret =  xmlSecOpenSSLEvpSignatureEcdsa_OpenSSL2XmlDSig(ctx->keySizeBits, out);
         if(ret < 0) {
             xmlSecInternalError("xmlSecOpenSSLEvpSignatureEcdsa_OpenSSL2XmlDSig", xmlSecTransformGetName(transform));
             goto done;
         }
         break;
 #else  /* XMLSEC_NO_EC */
-        xmlSecNotImplementedError("ECDSA signatures are disabled");
+        xmlSecNotImplementedError("ECDSA signatures support is disabled during compilation");
         goto done;
 #endif /* XMLSEC_NO_EC */
     }
@@ -1629,12 +1635,19 @@ xmlSecOpenSSLEvpSignatureDsa_XmlDSig2OpenSSL(const xmlSecTransformId transformId
     }
 
     /* check size: we expect the r and s to be the same size and match the size of
-     * the key (RFC 6931); however some  implementations (e.g. Java) cut leading zeros:
-     * https://github.com/lsh123/xmlsec/issues/228 */
+     * the key (RFC 6931) */
     XMLSEC_SAFE_CAST_SIZE_TO_INT(dataSize, signLen, goto done, NULL);
-    if((signLen < 2 * signHalfLen) && (signLen % 2 == 0)) {
+    if(signLen == 2 * signHalfLen) {
+        /* good, do nothing */
+    } else if((signLen < 2 * signHalfLen) && (signLen % 2 == 0)) {
+        /* however some implementations (e.g. Java) cut leading zeros:
+         * https://github.com/lsh123/xmlsec/issues/228 */
         signHalfLen = signLen / 2;
-    } else if(signLen != 2 * signHalfLen) {
+    } else if((signLen > 2 * signHalfLen) && (signLen % 2 == 0)) {
+        /* however some implementations (e.g. Java) add leading zeros:
+         * https://github.com/lsh123/xmlsec/issues/941 */
+        signHalfLen = signLen / 2;
+    } else {
         xmlSecInternalError3("xmlSecOpenSSLEvpSignatureDsaHalfLen", NULL,
             "signLen=%d; signHalfLen=%d", signLen, signHalfLen);
         goto done;
@@ -1831,7 +1844,7 @@ xmlSecOpenSSLTransformDsaSha256GetKlass(void) {
 #ifndef XMLSEC_NO_EC
 
 static int
-xmlSecOpenSSLEvpSignatureEcdsa_XmlDSig2OpenSSL(xmlSecSize keySize, const xmlSecByte * data, xmlSecSize dataSize,
+xmlSecOpenSSLEvpSignatureEcdsa_XmlDSig2OpenSSL(xmlSecSize keySizeBits, const xmlSecByte * data, xmlSecSize dataSize,
     unsigned char ** out, int * outLen
 ) {
     ECDSA_SIG* sig = NULL;
@@ -1841,23 +1854,30 @@ xmlSecOpenSSLEvpSignatureEcdsa_XmlDSig2OpenSSL(xmlSecSize keySize, const xmlSecB
     int res = -1;
     int ret;
 
-    xmlSecAssert2(keySize > 0, 0);
+    xmlSecAssert2(keySizeBits > 0, 0);
     xmlSecAssert2(data != NULL, 0);
     xmlSecAssert2(dataSize > 0, 0);
     xmlSecAssert2(out != NULL, 0);
     xmlSecAssert2((*out) == NULL, 0);
     xmlSecAssert2(outLen != NULL, 0);
 
-    /* get signature size */
-    XMLSEC_SAFE_CAST_SIZE_TO_INT(keySize, signHalfLen, goto done, NULL);
+    /* get half of signature size in bytes */
+    XMLSEC_SAFE_CAST_SIZE_TO_INT((keySizeBits + 7) / 8, signHalfLen, goto done, NULL);
 
     /* check size: we expect the r and s to be the same size and match the size of
-     * the key (RFC 6931); however some  implementations (e.g. Java) cut leading zeros:
-     * https://github.com/lsh123/xmlsec/issues/228 */
+     * the key (RFC 6931) */
     XMLSEC_SAFE_CAST_SIZE_TO_INT(dataSize, signLen, goto done, NULL);
-    if((signLen < 2 * signHalfLen) && (signLen % 2 == 0)) {
-        signHalfLen = signLen / 2;
-    } else if(signLen != 2 * signHalfLen) {
+    if(signLen == 2 * signHalfLen) {
+        /* good, do nothing */
+    } else if((signLen < 2 * signHalfLen) && (signLen % 2 == 0)) {
+        /* however some implementations (e.g. Java) cut leading zeros:
+         * https://github.com/lsh123/xmlsec/issues/228 */
+         signHalfLen = signLen / 2;
+    } else if((signLen > 2 * signHalfLen) && (signLen % 2 == 0)) {
+        /* however some implementations (e.g. Java) add leading zeros:
+         * https://github.com/lsh123/xmlsec/issues/941 */
+         signHalfLen = signLen / 2;
+    } else {
         xmlSecInternalError3("xmlSecOpenSSLEvpSignatureEcdsaHalfLen", NULL,
             "signLen=%d; signHalfLen=%d", signLen, signHalfLen);
         goto done;
@@ -1914,7 +1934,7 @@ done:
 }
 
 static int
-xmlSecOpenSSLEvpSignatureEcdsa_OpenSSL2XmlDSig(xmlSecSize keySize, xmlSecBufferPtr data) {
+xmlSecOpenSSLEvpSignatureEcdsa_OpenSSL2XmlDSig(xmlSecSize keySizeBits, xmlSecBufferPtr data) {
     xmlSecByte * buf;
     xmlSecSize bufSize;
     int bufLen, signHalfLen, rLen, sLen;
@@ -1924,7 +1944,7 @@ xmlSecOpenSSLEvpSignatureEcdsa_OpenSSL2XmlDSig(xmlSecSize keySize, xmlSecBufferP
     int ret;
     int res = -1;
 
-    xmlSecAssert2(keySize > 0, 0);
+    xmlSecAssert2(keySizeBits > 0, 0);
     xmlSecAssert2(data != NULL, 0);
 
     buf = xmlSecBufferGetData(data);
@@ -1932,8 +1952,8 @@ xmlSecOpenSSLEvpSignatureEcdsa_OpenSSL2XmlDSig(xmlSecSize keySize, xmlSecBufferP
     xmlSecAssert2(buf != NULL, 0);
     xmlSecAssert2(bufSize > 0, 0);
 
-    /* get signature size */
-    XMLSEC_SAFE_CAST_SIZE_TO_INT(keySize, signHalfLen, goto done, NULL);
+    /* get half of signature size in bytes */
+    XMLSEC_SAFE_CAST_SIZE_TO_INT((keySizeBits + 7) / 8, signHalfLen, goto done, NULL);
 
     /* extract signature */
     XMLSEC_SAFE_CAST_SIZE_TO_INT(bufSize, bufLen, goto done, NULL);

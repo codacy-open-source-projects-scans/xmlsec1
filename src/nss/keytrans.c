@@ -140,7 +140,7 @@ xmlSecNssKeyTransportInitialize(xmlSecTransformPtr transform) {
 
     /* not found */
     {
-        xmlSecNotImplementedError(xmlSecErrorsSafeString(xmlSecTransformGetName(transform)));
+        xmlSecInvalidTransfromError(transform);
         return(-1);
     }
 
@@ -805,7 +805,7 @@ xmlSecNssTransformRsaOaepEnc11GetKlass(void) {
 
 static int
 xmlSecNssRsaOaepNodeRead(xmlSecTransformPtr transform, xmlNodePtr node,
-                         xmlSecTransformCtxPtr transformCtx ATTRIBUTE_UNUSED) {
+                         xmlSecTransformCtxPtr transformCtx XMLSEC_ATTRIBUTE_UNUSED) {
     xmlSecNssKeyTransportCtxPtr ctx;
     xmlSecTransformRsaOaepParams oaepParams;
     int ret;

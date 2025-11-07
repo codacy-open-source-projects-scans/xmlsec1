@@ -50,7 +50,7 @@
 #include <openssl/engine.h>
 #endif /* !defined(OPENSSL_NO_ENGINE) && (!defined(XMLSEC_OPENSSL_API_300) || defined(XMLSEC_OPENSSL3_ENGINES)) */
 
-#ifndef OPENSSL_IS_BORINGSSL
+#if !defined(OPENSSL_IS_BORINGSSL) && !defined(OPENSSL_IS_AWSLC)
 #include <openssl/ui.h>
 #endif /* OPENSSL_IS_BORINGSSL */
 
@@ -150,11 +150,11 @@ xmlSecOpenSSLAppInit(const char* config) {
     opts |= OPENSSL_INIT_ADD_ALL_DIGESTS;
     opts |= OPENSSL_INIT_LOAD_CONFIG;
 
-#if !defined(OPENSSL_IS_BORINGSSL)
+#if !defined(OPENSSL_IS_BORINGSSL) && !defined(OPENSSL_IS_AWSLC)
     opts |= OPENSSL_INIT_ASYNC;
 #endif /* !defined(OPENSSL_IS_BORINGSSL) */
 
-#if !defined(OPENSSL_IS_BORINGSSL) && !defined(XMLSEC_OPENSSL_API_300)
+#if !defined(OPENSSL_IS_BORINGSSL) && !defined(XMLSEC_OPENSSL_API_300) && !defined(OPENSSL_IS_AWSLC)
     opts |= OPENSSL_INIT_ENGINE_ALL_BUILTIN;
 #endif /* !defined(OPENSSL_IS_BORINGSSL) && !defined(XMLSEC_OPENSSL_API_300) */
 
@@ -188,6 +188,10 @@ error:
  */
 int
 xmlSecOpenSSLAppShutdown(void) {
+    /* debug only feature, should not be used in production */
+    if(xmlSecErrorsPrintCryptoLibraryLogOnExitIsEnabled() == 1) {
+        ERR_print_errors_fp(stderr);
+    }
     /* OpenSSL 1.1.0+ does not require explicit cleanup */
     return(0);
 }
@@ -613,7 +617,7 @@ done:
     UNREFERENCED_PARAMETER(pwd);
     UNREFERENCED_PARAMETER(pwdCallback);
     UNREFERENCED_PARAMETER(pwdCallbackCtx);
-    xmlSecNotImplementedError("OpenSSL Engine interface is not enabled");
+    xmlSecNotImplementedError("OpenSSL Engine interface is disabled during compilation");
     return (NULL);
 #endif /* !defined(OPENSSL_NO_ENGINE) && (!defined(XMLSEC_OPENSSL_API_300) || defined(XMLSEC_OPENSSL3_ENGINES)) */
 }
@@ -656,7 +660,7 @@ xmlSecOpenSSLCreateKey(EVP_PKEY ** pKey,  X509 ** keyCert, STACK_OF(X509) ** cer
 
     /* try to get key name from x509 cert */
     if((*keyCert) != NULL) {
-        unsigned char * name = NULL;
+        const unsigned char * name = NULL;
         int nameLen = 0;
 
         if(name == NULL) {
@@ -760,7 +764,7 @@ xmlSecOpenSSLAppCheckCertMatchesKey(EVP_PKEY * pKey,  X509 * cert) {
 static X509 *
 xmlSecOpenSSLAppFindKeyCert(EVP_PKEY * pKey, STACK_OF(X509) * certs) {
     X509 * cert;
-    int ii, size;
+    xmlSecOpenSSLSizeT ii, size;
     int ret;
 
     xmlSecAssert2(pKey != NULL, NULL);
@@ -981,7 +985,7 @@ done:
     UNREFERENCED_PARAMETER(pwdCallback);
     UNREFERENCED_PARAMETER(pwdCallbackCtx);
 
-    xmlSecNotImplementedError("X509 or OpenSSL Stores support is disabled");
+    xmlSecNotImplementedError("X509 or OpenSSL Stores support is disabled during compilation");
     return(NULL);
 #endif /* !defined(XMLSEC_OPENSSL_NO_STORE) && !defined(XMLSEC_NO_X509) */
 }
@@ -1256,8 +1260,8 @@ xmlSecOpenSSLAppPkcs12LoadMemory(const xmlSecByte* data, xmlSecSize dataSize,
  */
 xmlSecKeyPtr
 xmlSecOpenSSLAppPkcs12LoadBIO(BIO* bio, const char *pwd,
-                           void* pwdCallback ATTRIBUTE_UNUSED,
-                           void* pwdCallbackCtx ATTRIBUTE_UNUSED) {
+                           void* pwdCallback XMLSEC_ATTRIBUTE_UNUSED,
+                           void* pwdCallbackCtx XMLSEC_ATTRIBUTE_UNUSED) {
 
     PKCS12 *p12 = NULL;
     EVP_PKEY * pKey = NULL;
@@ -1775,7 +1779,6 @@ xmlSecOpenSSLAppDefaultKeysMngrInit(xmlSecKeysMngrPtr mngr) {
         return(-1);
     }
 
-    /* TODO */
     mngr->getKey = xmlSecKeysMngrGetKey;
     return(0);
 }
@@ -1845,7 +1848,7 @@ xmlSecOpenSSLAppDefaultKeysMngrVerifyKey(xmlSecKeysMngrPtr mngr, xmlSecKeyPtr ke
     xmlSecAssert2(key != NULL, -1);
     xmlSecAssert2(keyInfoCtx != NULL, -1);
 
-    xmlSecNotImplementedError("X509 support is disabled");
+    xmlSecNotImplementedError("X509 support is disabled during compilation");
     return(-1);
 
 #endif /* XMLSEC_NO_X509 */
@@ -2017,15 +2020,16 @@ xmlSecOpenSSLDefaultPasswordCallback(char *buf, int buflen, int verify, void *us
 
 static int
 xmlSecOpenSSLDummyPasswordCallback(char *buf, int bufLen,
-                                   int verify ATTRIBUTE_UNUSED,
+                                   int verify XMLSEC_ATTRIBUTE_UNUSED,
                                    void *userdata) {
-#if defined(_MSC_VER)
     xmlSecSize bufSize;
-#endif /* defined(_MSC_VER) */
     char* password;
     size_t passwordSize;
     int passwordLen;
     UNREFERENCED_PARAMETER(verify);
+
+    xmlSecAssert2(buf != NULL, -1);
+    xmlSecAssert2(bufLen > 1, -1);
 
     password = (char*)userdata;
     if(password == NULL) {
@@ -2038,11 +2042,12 @@ xmlSecOpenSSLDummyPasswordCallback(char *buf, int bufLen,
         return(-1);
     }
 
-#if defined(_MSC_VER)
     XMLSEC_SAFE_CAST_INT_TO_SIZE(bufLen, bufSize, return(-1), NULL);
+#if defined(_MSC_VER)
     strcpy_s(buf, bufSize, password);
 #else  /* defined(_MSC_VER) */
-    strcpy(buf, password);
+    strncpy(buf, password, bufSize);
+    buf[bufLen - 1] = '\0'; /* ensure \0 terminated */
 #endif /* defined(_MSC_VER) */
 
     return (passwordLen);

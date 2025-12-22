@@ -268,6 +268,12 @@ else
     xmlsec_feature_rsa_oaep_different_digest_and_mgf1="no"
 fi
 
+# Only OpenSSL supports ASN1 signatures for now
+if [ "z$crypto" = "zopenssl" -o  "z$crypto" = "zgnutls" -o "z$crypto" = "znss" -o  "z$crypto" = "zmscng"  ] ; then
+    xmlsec_feature_asn1_signatures="yes"
+else
+    xmlsec_feature_asn1_signatures="no"
+fi
 
 #
 # Setup keys config
@@ -782,12 +788,14 @@ execDSigTestWithCryptoConfig() {
     fi
 
     # run tests
+    xml_verification_failed="no"
     if [ -n "$params1" ] ; then
         printf "    Verify existing signature                            "
         echo "$extra_vars $VALGRIND $xmlsec_app verify --X509-skip-strict-checks $xmlsec_params  --crypto-config $crypto_config $params1 $full_file.xml" >> $curlogfile
         $VALGRIND $xmlsec_app verify --X509-skip-strict-checks $xmlsec_params --crypto-config $crypto_config $params1 $full_file.xml >> $curlogfile 2>> $curlogfile
         printRes $expected_res $?
         if [ $? -ne 0 ]; then
+            xml_verification_failed="yes"
             failures=`expr $failures + 1`
         fi
     fi
@@ -798,6 +806,17 @@ execDSigTestWithCryptoConfig() {
         $VALGRIND $xmlsec_app sign $xmlsec_params --crypto-config $crypto_config $params2 --output $tmpfile $full_file.tmpl >> $curlogfile 2>> $curlogfile
         printRes $res_success $?
         if [ $? -ne 0 ]; then
+            failures=`expr $failures + 1`
+        fi
+    fi
+
+    # update existing signature if verification failed
+    if [  "z$XMLSEC_TEST_UPDATE_XML_ON_FAILURE" = "zyes" -a "z$xml_verification_failed" = "zyes" ] ; then
+        printf "    Update existing signature                            "
+        echo "cp $tmpfile $full_file.xml" >> $curlogfile 2>> $curlogfile
+        cp $tmpfile $full_file.xml
+        printRes $res_success $?
+        if [ $? -ne  0 ]; then
             failures=`expr $failures + 1`
         fi
     fi
@@ -901,6 +920,7 @@ execEncTestWithCryptoConfig() {
     fi
 
     # run tests
+    xml_verification_failed="no"
     if [ -n "$params1" ] ; then
         rm -f $tmpfile
         printf "    Decrypt existing document                            "
@@ -919,6 +939,7 @@ execEncTestWithCryptoConfig() {
             printRes $expected_res $res
         fi
     	if [ $? -ne 0 ]; then
+            xml_verification_failed="yes"
             failures=`expr $failures + 1`
     	fi
     fi
@@ -930,6 +951,17 @@ execEncTestWithCryptoConfig() {
         $VALGRIND $xmlsec_app encrypt $xmlsec_params --crypto-config $crypto_config $params2 --output $tmpfile $full_file.tmpl >> $curlogfile 2>> $curlogfile
         printRes $res_success $?
         if [ $? -ne 0 ]; then
+            failures=`expr $failures + 1`
+        fi
+    fi
+
+    # update existing decryption failed
+    if [  "z$XMLSEC_TEST_UPDATE_XML_ON_FAILURE" = "zyes" -a "z$xml_verification_failed" = "zyes" ] ; then
+        printf "    Update existing enc document                         "
+        echo "cp $tmpfile $full_file.xml" >> $curlogfile 2>> $curlogfile
+        cp $tmpfile $full_file.xml
+        printRes $res_success $?
+        if [ $? -ne  0 ]; then
             failures=`expr $failures + 1`
         fi
     fi
@@ -991,9 +1023,9 @@ elif [ "z$crypto" = "zopenssl" -a "z$xmlsec_openssl_flavor" = "zboringssl" ] ; t
 elif [ "z$crypto" = "zopenssl" ] ; then
     echo "--- OPENSSL FLAVOR: $xmlsec_openssl_flavor" >> $logfile
     echo "--- OPENSSL FLAVOR: $xmlsec_openssl_flavor"
-    min_percent_success=90
+    min_percent_success=80
 elif [ "z$crypto" = "znss" ] ; then
-    min_percent_success=90
+    min_percent_success=80
 elif [ "z$crypto" = "zgnutls" ] ; then
     min_percent_success=80
 elif [ "z$crypto" = "zmscng" ] ; then

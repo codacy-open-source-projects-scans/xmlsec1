@@ -227,17 +227,25 @@ else
     xmlsec_feature_cert_check_skip_time="no"
 fi
 
-# currently only openssl/gnutls/nss support loading CRL from the command line
+# currently only openssl/gnutls/nss/mscng support loading CRL from the command line
 # https://github.com/lsh123/xmlsec/issues/583
-if [ "z$crypto" = "zopenssl" -o  "z$crypto" = "zgnutls" -o "z$crypto" = "znss" ] ; then
+if [ "z$crypto" = "zopenssl" -o  "z$crypto" = "zgnutls" -o "z$crypto" = "znss" -o "z$crypto" = "zmscng" ] ; then
     xmlsec_feature_crl_load="yes"
 else
     xmlsec_feature_crl_load="no"
 fi
 
-# currently only openssl/nss support CRL verification by time
+# only openssl/gnutls/nss/mscng support crl verification
+# https://github.com/lsh123/xmlsec/issues/585
+if [ "z$crypto" = "zopenssl" -o  "z$crypto" = "zgnutls" -o "z$crypto" = "znss" -o "z$crypto" = "zmscng" ] ; then
+    xmlsec_feature_crl_verification="yes"
+else
+    xmlsec_feature_crl_verification="no"
+fi
+
+# currently only openssl/nss/mscng support CRL verification by time
 # https://github.com/lsh123/xmlsec/issues/579
-if [ "z$crypto" = "zopenssl" -o "z$crypto" = "znss"  ] ; then
+if [ "z$crypto" = "zopenssl" -o "z$crypto" = "znss" -o "z$crypto" = "zmscng" ] ; then
     xmlsec_feature_crl_check_skip_time="yes"
 else
     xmlsec_feature_crl_check_skip_time="no"
@@ -251,13 +259,6 @@ else
     xmlsec_feature_key_check="no"
 fi
 
-# only openssl, gnutls support crl verification
-# https://github.com/lsh123/xmlsec/issues/585
-if [ "z$crypto" = "zopenssl" -o  "z$crypto" = "zgnutls" ] ; then
-    xmlsec_feature_crl_verification="yes"
-else
-    xmlsec_feature_crl_verification="no"
-fi
 
 # Advanced RSA OAEP modes:
 # - MSCrypto only supports SHA1 for digest and mgf1

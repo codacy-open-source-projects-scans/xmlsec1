@@ -144,6 +144,10 @@ xmlSecCryptoGetFunctions_openssl(void) {
     gXmlSecOpenSSLFunctions->keyDataSLHDSAGetKlass      = xmlSecOpenSSLKeyDataSLHDSAGetKlass;
 #endif /* XMLSEC_NO_SLHDSA */
 
+#ifndef XMLSEC_NO_EDDSA
+    gXmlSecOpenSSLFunctions->keyDataEdDSAGetKlass       = xmlSecOpenSSLKeyDataEdDSAGetKlass;
+#endif /* XMLSEC_NO_EDDSA */
+
 #ifndef XMLSEC_NO_X509
     gXmlSecOpenSSLFunctions->keyDataX509GetKlass        = xmlSecOpenSSLKeyDataX509GetKlass;
     gXmlSecOpenSSLFunctions->keyDataRawX509CertGetKlass = xmlSecOpenSSLKeyDataRawX509CertGetKlass;
@@ -400,6 +404,14 @@ xmlSecCryptoGetFunctions_openssl(void) {
     gXmlSecOpenSSLFunctions->transformSLHDSA_SHA2_256sGetKlass = xmlSecOpenSSLTransformSLHDSA_SHA2_256sGetKlass;
 #endif /* XMLSEC_NO_SLHDSA */
 
+#ifndef XMLSEC_NO_EDDSA
+    gXmlSecOpenSSLFunctions->transformEdDSAEd25519GetKlass    = xmlSecOpenSSLTransformEdDSAEd25519GetKlass;
+    gXmlSecOpenSSLFunctions->transformEdDSAEd25519ctxGetKlass = xmlSecOpenSSLTransformEdDSAEd25519ctxGetKlass;
+    gXmlSecOpenSSLFunctions->transformEdDSAEd25519phGetKlass  = xmlSecOpenSSLTransformEdDSAEd25519phGetKlass;
+    gXmlSecOpenSSLFunctions->transformEdDSAEd448GetKlass      = xmlSecOpenSSLTransformEdDSAEd448GetKlass;
+    gXmlSecOpenSSLFunctions->transformEdDSAEd448phGetKlass    = xmlSecOpenSSLTransformEdDSAEd448phGetKlass;
+#endif /* XMLSEC_NO_EDDSA */
+
 
     /******************************* SHA ********************************/
 #ifndef XMLSEC_NO_SHA1
@@ -569,7 +581,7 @@ xmlSecOpenSSLGenerateRandom(xmlSecBufferPtr buffer, xmlSecSize size) {
 
     /* get random data */
     ret = RAND_priv_bytes_ex(xmlSecOpenSSLGetLibCtx(), (xmlSecByte*)xmlSecBufferGetData(buffer), size,
-                        XMLSEEC_OPENSSL_RAND_BYTES_STRENGTH);
+                        XMLSEC_OPENSSL_RAND_BYTES_STRENGTH);
     if(ret != 1) {
         xmlSecOpenSSLError2("RAND_priv_bytes_ex", NULL,
                             "size=" XMLSEC_SIZE_FMT, size);

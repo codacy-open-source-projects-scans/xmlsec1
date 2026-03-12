@@ -29,9 +29,8 @@ libxmlsec1_nss_la_SOURCES =\
 	keysstore.c \
 	keytrans.c \
 	kw_des.c \
-	kw_aes.c \
-	pbkdf2.c \
-	concatkdf.c \
+	kw_rfc_3394.c \
+	kdf.c \
 	der_encoded_value.c \
 	pkikeys.c \
 	private.h \

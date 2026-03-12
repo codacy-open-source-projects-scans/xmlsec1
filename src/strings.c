@@ -32,6 +32,7 @@ const xmlChar xmlSecEnc11Ns[]                   = "http://www.w3.org/2009/xmlenc
 const xmlChar xmlSecXPathNs[]                   = "http://www.w3.org/TR/1999/REC-xpath-19991116";
 const xmlChar xmlSecXPath2Ns[]                  = "http://www.w3.org/2002/06/xmldsig-filter2";
 const xmlChar xmlSecXPointerNs[]                = "http://www.w3.org/2001/04/xmldsig-more/xptr";
+const xmlChar xmlSecXmldsig2021MoreNs[]         = "http://www.w3.org/2021/04/xmldsig-more#";
 
 /*************************************************************************
  *
@@ -130,6 +131,52 @@ const xmlChar xmlSecHrefKWAes192[]              = "http://www.w3.org/2001/04/xml
 
 const xmlChar xmlSecNameKWAes256[]              = "kw-aes256";
 const xmlChar xmlSecHrefKWAes256[]              = "http://www.w3.org/2001/04/xmlenc#kw-aes256";
+
+/*************************************************************************
+ *
+ * Camellia strings
+ *
+ ************************************************************************/
+#ifndef XMLSEC_NO_CAMELLIA
+const xmlChar xmlSecNameCamelliaKeyValue[]      = "camellia";
+const xmlChar xmlSecNodeCamelliaKeyValue[]      = "CamelliaKeyValue";
+const xmlChar xmlSecHrefCamelliaKeyValue[]      = "http://www.aleksey.com/xmlsec/2002#CamelliaKeyValue";
+
+const xmlChar xmlSecNameCamellia128Cbc[]        = "camellia128-cbc";
+const xmlChar xmlSecHrefCamellia128Cbc[]        = "http://www.w3.org/2001/04/xmldsig-more#camellia128-cbc";
+
+const xmlChar xmlSecNameCamellia192Cbc[]        = "camellia192-cbc";
+const xmlChar xmlSecHrefCamellia192Cbc[]        = "http://www.w3.org/2001/04/xmldsig-more#camellia192-cbc";
+
+const xmlChar xmlSecNameCamellia256Cbc[]        = "camellia256-cbc";
+const xmlChar xmlSecHrefCamellia256Cbc[]        = "http://www.w3.org/2001/04/xmldsig-more#camellia256-cbc";
+
+const xmlChar xmlSecNameKWCamellia128[]         = "kw-camellia128";
+const xmlChar xmlSecHrefKWCamellia128[]         = "http://www.w3.org/2001/04/xmldsig-more#kw-camellia128";
+
+const xmlChar xmlSecNameKWCamellia192[]         = "kw-camellia192";
+const xmlChar xmlSecHrefKWCamellia192[]         = "http://www.w3.org/2001/04/xmldsig-more#kw-camellia192";
+
+const xmlChar xmlSecNameKWCamellia256[]         = "kw-camellia256";
+const xmlChar xmlSecHrefKWCamellia256[]         = "http://www.w3.org/2001/04/xmldsig-more#kw-camellia256";
+#endif /* XMLSEC_NO_CAMELLIA */
+
+/*************************************************************************
+ *
+ * ChaCha20 strings
+ *
+ ************************************************************************/
+const xmlChar xmlSecNameChaCha20[]              = "chacha20";
+const xmlChar xmlSecHrefChaCha20[]              = "http://www.w3.org/2021/04/xmldsig-more#chacha20";
+const xmlChar xmlSecNodeChaCha20Nonce[]         = "Nonce";
+const xmlChar xmlSecNodeChaCha20Counter[]       = "Counter";
+const xmlChar xmlSecNameChaCha20KeyValue[]      = "chacha20";
+const xmlChar xmlSecNodeChaCha20KeyValue[]      = "ChaCha20KeyValue";
+const xmlChar xmlSecHrefChaCha20KeyValue[]      = "http://www.aleksey.com/xmlsec/2002#ChaCha20KeyValue";
+
+const xmlChar xmlSecNameChaCha20Poly1305[]      = "chacha20-poly1305";
+const xmlChar xmlSecHrefChaCha20Poly1305[]      = "http://www.w3.org/2021/04/xmldsig-more#chacha20poly1305";
+const xmlChar xmlSecNodeChaCha20Poly1305AAD[]   = "AAD";
 
 /*************************************************************************
  *
@@ -595,6 +642,22 @@ const xmlChar xmlSecNodePbkdf2SaltSpecified[]   = "Specified";
 const xmlChar xmlSecNodePbkdf2IterationCount[]  = "IterationCount";
 const xmlChar xmlSecNodePbkdf2KeyLength[]       = "KeyLength";
 const xmlChar xmlSecNodePbkdf2PRF[]             = "PRF";
+
+/*************************************************************************
+ *
+ * HKDF strings
+ *
+ ************************************************************************/
+const xmlChar xmlSecNameHkdfKey[]               = "hkdf";
+
+const xmlChar xmlSecNameHkdf[]                  = "hkdf";
+const xmlChar xmlSecHrefHkdf[]                  = "http://www.w3.org/2021/04/xmldsig-more#hkdf";
+
+const xmlChar xmlSecNodeHkdfParams[]            = "HKDFParams";
+const xmlChar xmlSecNodeHkdfPRF[]               = "PRF";
+const xmlChar xmlSecNodeHkdfSalt[]              = "Salt";
+const xmlChar xmlSecNodeHkdfInfo[]              = "Info";
+const xmlChar xmlSecNodeHkdfKeyLength[]         = "KeyLength";
 
 /*************************************************************************
  *

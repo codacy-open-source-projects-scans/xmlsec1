@@ -29,7 +29,7 @@
 #include <xmlsec/nss/crypto.h>
 
 #include "../cast_helpers.h"
-#include "../kw_aes_des.h"
+#include "../kw_helpers.h"
 
 /* https://www.w3.org/TR/xmlenc-core1/#sec-AES-GCM
  *
@@ -40,10 +40,7 @@
 #define XMLSEC_NSS_GCM_CIPHER_IV_SIZE                    12
 #define XMLSEC_NSS_GCM_CIPHER_TAG_SIZE                   16
 
-/* struct was renamed in https://github.com/nss-dev/nss/commit/ba931199b924a2eac38899d04b04eedc75771546 */
-#if (NSS_VMAJOR < 3) || ((NSS_VMAJOR == 3) && (NSS_VMINOR < 52))
-#define CK_NSS_GCM_PARAMS CK_GCM_PARAMS
-#endif // (NSS_VMAJOR < 3) || ((NSS_VMAJOR == 3) && (NSS_VMINOR < 52))
+
 
 /**************************************************************************
  *
@@ -106,13 +103,13 @@ xmlSecNssGcmCipherInitialize(xmlSecTransformPtr transform) {
 
     if(transform->id == xmlSecNssTransformAes128GcmId) {
         ctx->keyId      = xmlSecNssKeyDataAesId;
-        ctx->keySize    = XMLSEC_KW_AES128_KEY_SIZE;
+        ctx->keySize    = XMLSEC_KW_RFC3394_KEY_SIZE_128;
     } else if(transform->id == xmlSecNssTransformAes192GcmId) {
         ctx->keyId      = xmlSecNssKeyDataAesId;
-        ctx->keySize    = XMLSEC_KW_AES192_KEY_SIZE;
+        ctx->keySize    = XMLSEC_KW_RFC3394_KEY_SIZE_192;
     } else if(transform->id == xmlSecNssTransformAes256GcmId) {
         ctx->keyId      = xmlSecNssKeyDataAesId;
-        ctx->keySize    = XMLSEC_KW_AES256_KEY_SIZE;
+        ctx->keySize    = XMLSEC_KW_RFC3394_KEY_SIZE_256;
     } else
 
     if(1) {

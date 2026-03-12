@@ -416,6 +416,32 @@ static xmlSecAppCmdLineParam aesKeyParam = {
 };
 #endif /* XMLSEC_NO_AES */
 
+#ifndef XMLSEC_NO_CAMELLIA
+static xmlSecAppCmdLineParam camelliaKeyParam = {
+    xmlSecAppCmdLineTopicKeysMngr,
+    "--camellia-key",
+    "--camelliakey",
+    "--camellia-key[:<name>] <file>"
+    "\n\tload Camellia key from binary file <file>",
+    xmlSecAppCmdLineParamTypeString,
+    xmlSecAppCmdLineParamFlagParamNameValue | xmlSecAppCmdLineParamFlagMultipleValues,
+    NULL
+};
+#endif /* XMLSEC_NO_CAMELLIA */
+
+#ifndef XMLSEC_NO_CHACHA20
+static xmlSecAppCmdLineParam chacha20KeyParam = {
+    xmlSecAppCmdLineTopicKeysMngr,
+    "--chacha20-key",
+    "--chacha20key",
+    "--chacha20-key[:<name>] <file>"
+    "\n\tload ChaCha20 key from binary file <file>",
+    xmlSecAppCmdLineParamTypeString,
+    xmlSecAppCmdLineParamFlagParamNameValue | xmlSecAppCmdLineParamFlagMultipleValues,
+    NULL
+};
+#endif /* XMLSEC_NO_CHACHA20 */
+
 #ifndef XMLSEC_NO_CONCATKDF
 static xmlSecAppCmdLineParam concatKdfKeyParam = {
     xmlSecAppCmdLineTopicKeysMngr,
@@ -479,6 +505,19 @@ static xmlSecAppCmdLineParam pbkdf2KeyParam = {
     NULL
 };
 #endif /* XMLSEC_NO_PBKDF2 */
+
+#ifndef XMLSEC_NO_HKDF
+static xmlSecAppCmdLineParam hkdfKeyParam = {
+    xmlSecAppCmdLineTopicKeysMngr,
+    "--hkdfkey",
+    "--hkdf-key",
+    "--hkdf-key[:<name>] <file>"
+    "\n\tload HKDF key (IKM) from binary file <file>",
+    xmlSecAppCmdLineParamTypeString,
+    xmlSecAppCmdLineParamFlagParamNameValue | xmlSecAppCmdLineParamFlagMultipleValues,
+    NULL
+};
+#endif /* XMLSEC_NO_HKDF */
 
 
 static xmlSecAppCmdLineParam pwdParam = {
@@ -1103,6 +1142,14 @@ static xmlSecAppCmdLineParamPtr parameters[] = {
     &aesKeyParam,
 #endif  /* XMLSEC_NO_AES */
 
+#ifndef XMLSEC_NO_CAMELLIA
+    &camelliaKeyParam,
+#endif  /* XMLSEC_NO_CAMELLIA */
+
+#ifndef XMLSEC_NO_CHACHA20
+    &chacha20KeyParam,
+#endif  /* XMLSEC_NO_CHACHA20 */
+
 #ifndef XMLSEC_NO_CONCATKDF
     &concatKdfKeyParam,
 #endif  /* XMLSEC_NO_CONCATKDF */
@@ -1118,6 +1165,10 @@ static xmlSecAppCmdLineParamPtr parameters[] = {
 #ifndef XMLSEC_NO_PBKDF2
     &pbkdf2KeyParam,
 #endif  /* XMLSEC_NO_PBKDF2 */
+
+#ifndef XMLSEC_NO_HKDF
+    &hkdfKeyParam,
+#endif  /* XMLSEC_NO_HKDF */
 
 #ifndef XMLSEC_NO_X509
     &pkcs12Param,
@@ -2945,6 +2996,42 @@ xmlSecAppLoadKeys(void) {
     }
 #endif /* XMLSEC_NO_AES */
 
+#ifndef XMLSEC_NO_CAMELLIA
+    /* read all Camellia keys */
+    for(value = camelliaKeyParam.value; value != NULL; value = value->next) {
+        if(value->strValue == NULL) {
+            fprintf(stderr, "Error: invalid value for option \"%s\".\n",
+                    camelliaKeyParam.fullName);
+            xmlSecKeyInfoCtxDestroy(keyInfoCtx);
+            return(-1);
+        } else if(xmlSecAppCryptoSimpleKeysMngrBinaryKeyLoad(g_keysManager,
+                    (const char*)xmlSecNameCamelliaKeyValue, value->strValue, value->paramNameValue) < 0) {
+            fprintf(stderr, "Error: failed to load Camellia key from \"%s\".\n",
+                    value->strValue);
+            xmlSecKeyInfoCtxDestroy(keyInfoCtx);
+            return(-1);
+        }
+    }
+#endif /* XMLSEC_NO_CAMELLIA */
+
+#ifndef XMLSEC_NO_CHACHA20
+    /* read all ChaCha20 keys */
+    for(value = chacha20KeyParam.value; value != NULL; value = value->next) {
+        if(value->strValue == NULL) {
+            fprintf(stderr, "Error: invalid value for option \"%s\".\n",
+                    chacha20KeyParam.fullName);
+            xmlSecKeyInfoCtxDestroy(keyInfoCtx);
+            return(-1);
+        } else if(xmlSecAppCryptoSimpleKeysMngrBinaryKeyLoad(g_keysManager,
+                    (const char*)xmlSecNameChaCha20KeyValue, value->strValue, value->paramNameValue) < 0) {
+            fprintf(stderr, "Error: failed to load ChaCha20 key from \"%s\".\n",
+                    value->strValue);
+            xmlSecKeyInfoCtxDestroy(keyInfoCtx);
+            return(-1);
+        }
+    }
+#endif /* XMLSEC_NO_CHACHA20 */
+
 #ifndef XMLSEC_NO_CONCATKDF
     /* read all ConcatKDF keys */
     for(value = concatKdfKeyParam.value; value != NULL; value = value->next) {
@@ -3016,6 +3103,24 @@ xmlSecAppLoadKeys(void) {
         }
     }
 #endif /* XMLSEC_NO_PBKDF2 */
+
+#ifndef XMLSEC_NO_HKDF
+    /* read all HKDF keys (IKM) */
+    for(value = hkdfKeyParam.value; value != NULL; value = value->next) {
+        if(value->strValue == NULL) {
+            fprintf(stderr, "Error: invalid value for option \"%s\".\n",
+                    hkdfKeyParam.fullName);
+            xmlSecKeyInfoCtxDestroy(keyInfoCtx);
+            return(-1);
+        } else if(xmlSecAppCryptoSimpleKeysMngrBinaryKeyLoad(g_keysManager,
+                    (const char*)xmlSecNameHkdfKey, value->strValue, value->paramNameValue) < 0) {
+            fprintf(stderr, "Error: failed to load HKDF key from \"%s\".\n",
+                    value->strValue);
+            xmlSecKeyInfoCtxDestroy(keyInfoCtx);
+            return(-1);
+        }
+    }
+#endif /* XMLSEC_NO_HKDF */
 
 
     /* DONE */

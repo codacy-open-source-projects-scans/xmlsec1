@@ -33,6 +33,7 @@ XMLSEC_EXPORT_VAR const xmlChar xmlSecEnc11Ns[];
 XMLSEC_EXPORT_VAR const xmlChar xmlSecXPathNs[];
 XMLSEC_EXPORT_VAR const xmlChar xmlSecXPath2Ns[];
 XMLSEC_EXPORT_VAR const xmlChar xmlSecXPointerNs[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecXmldsig2021MoreNs[];
 
 
 /*************************************************************************
@@ -131,6 +132,52 @@ XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefKWAes192[];
 
 XMLSEC_EXPORT_VAR const xmlChar xmlSecNameKWAes256[];
 XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefKWAes256[];
+
+/*************************************************************************
+ *
+ * Camellia strings
+ *
+ ************************************************************************/
+#ifndef XMLSEC_NO_CAMELLIA
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNameCamelliaKeyValue[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNodeCamelliaKeyValue[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefCamelliaKeyValue[];
+
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNameCamellia128Cbc[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefCamellia128Cbc[];
+
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNameCamellia192Cbc[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefCamellia192Cbc[];
+
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNameCamellia256Cbc[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefCamellia256Cbc[];
+
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNameKWCamellia128[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefKWCamellia128[];
+
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNameKWCamellia192[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefKWCamellia192[];
+
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNameKWCamellia256[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefKWCamellia256[];
+#endif /* XMLSEC_NO_CAMELLIA */
+
+/*************************************************************************
+ *
+ * ChaCha20 strings
+ *
+ ************************************************************************/
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNameChaCha20[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefChaCha20[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNodeChaCha20Nonce[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNodeChaCha20Counter[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNameChaCha20KeyValue[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNodeChaCha20KeyValue[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefChaCha20KeyValue[];
+
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNameChaCha20Poly1305[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefChaCha20Poly1305[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNodeChaCha20Poly1305AAD[];
 
 /*************************************************************************
  *
@@ -594,6 +641,22 @@ XMLSEC_EXPORT_VAR const xmlChar xmlSecNodePbkdf2SaltSpecified[];
 XMLSEC_EXPORT_VAR const xmlChar xmlSecNodePbkdf2IterationCount[];
 XMLSEC_EXPORT_VAR const xmlChar xmlSecNodePbkdf2KeyLength[];
 XMLSEC_EXPORT_VAR const xmlChar xmlSecNodePbkdf2PRF[];
+
+/*************************************************************************
+ *
+ * HKDF strings
+ *
+ ************************************************************************/
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNameHkdfKey[];
+
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNameHkdf[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefHkdf[];
+
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNodeHkdfParams[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNodeHkdfPRF[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNodeHkdfSalt[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNodeHkdfInfo[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNodeHkdfKeyLength[];
 
 
 /*************************************************************************

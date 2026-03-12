@@ -29,11 +29,10 @@ libxmlsec1_gnutls_la_SOURCES =\
 	hmac.c \
 	keysstore.c \
 	kt_rsa.c \
-	kw_aes.c \
+	kw_rfc_3394.c \
 	kw_des.c \
-	concatkdf.c \
+	kdf.c \
 	key_agrmnt.c \
-	pbkdf2.c \
 	private.h \
 	symkeys.c \
 	signatures.c \

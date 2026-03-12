@@ -191,6 +191,12 @@ xmlSecGnuTLSSymKeyDataKlassCheck(xmlSecKeyDataKlass* klass) {
     }
 #endif /* XMLSEC_NO_AES */
 
+#ifndef XMLSEC_NO_CAMELLIA
+    if(klass == xmlSecGnuTLSKeyDataCamelliaId) {
+        return(1);
+    }
+#endif /* XMLSEC_NO_CAMELLIA */
+
 #ifndef XMLSEC_NO_HMAC
     if(klass == xmlSecGnuTLSKeyDataHmacId) {
         return(1);
@@ -208,6 +214,12 @@ xmlSecGnuTLSSymKeyDataKlassCheck(xmlSecKeyDataKlass* klass) {
         return(1);
     }
 #endif /* XMLSEC_NO_CONCATKDF */
+
+#ifndef XMLSEC_NO_HKDF
+    if(klass == xmlSecGnuTLSKeyDataHkdfId) {
+        return(1);
+    }
+#endif /* XMLSEC_NO_HKDF */
 
     return(0);
 }
@@ -300,6 +312,51 @@ xmlSecGnuTLSKeyDataAesSet(xmlSecKeyDataPtr data, const xmlSecByte* buf, xmlSecSi
     return(xmlSecBufferSetData(buffer, buf, bufSize));
 }
 #endif /* XMLSEC_NO_AES */
+
+#ifndef XMLSEC_NO_CAMELLIA
+/**************************************************************************
+ *
+ * <xmlsec:CamelliaKeyValue> processing
+ *
+ *************************************************************************/
+XMLSEC_GNUTLS_SYMKEY_KLASS(Camellia, Camellia)
+
+/**
+ * xmlSecGnuTLSKeyDataCamelliaGetKlass:
+ *
+ * The Camellia key data klass.
+ *
+ * Returns: Camellia key data klass.
+ */
+xmlSecKeyDataId
+xmlSecGnuTLSKeyDataCamelliaGetKlass(void) {
+    return(&xmlSecGnuTLSKeyDataCamelliaKlass);
+}
+
+/**
+ * xmlSecGnuTLSKeyDataCamelliaSet:
+ * @data:               the pointer to Camellia key data.
+ * @buf:                the pointer to key value.
+ * @bufSize:            the key value size (in bytes).
+ *
+ * Sets the value of Camellia key data.
+ *
+ * Returns: 0 on success or a negative value if an error occurs.
+ */
+int
+xmlSecGnuTLSKeyDataCamelliaSet(xmlSecKeyDataPtr data, const xmlSecByte* buf, xmlSecSize bufSize) {
+    xmlSecBufferPtr buffer;
+
+    xmlSecAssert2(xmlSecKeyDataCheckId(data, xmlSecGnuTLSKeyDataCamelliaId), -1);
+    xmlSecAssert2(buf != NULL, -1);
+    xmlSecAssert2(bufSize > 0, -1);
+
+    buffer = xmlSecKeyDataBinaryValueGetBuffer(data);
+    xmlSecAssert2(buffer != NULL, -1);
+
+    return(xmlSecBufferSetData(buffer, buf, bufSize));
+}
+#endif /* XMLSEC_NO_CAMELLIA */
 
 #ifndef XMLSEC_NO_DES
 /**************************************************************************
@@ -485,3 +542,49 @@ xmlSecGnuTLSKeyDataConcatKdfSet(xmlSecKeyDataPtr data, const xmlSecByte* buf, xm
 }
 
 #endif /* XMLSEC_NO_CONCATKDF */
+
+#ifndef XMLSEC_NO_HKDF
+/**************************************************************************
+ *
+ * HKDF key klass
+ *
+ *************************************************************************/
+XMLSEC_GNUTLS_SYMKEY_KLASS_EX(Hkdf, xmlSecNameHkdfKey, xmlSecKeyDataUsageReadFromFile, NULL, NULL, NULL)
+
+/**
+ * xmlSecGnuTLSKeyDataHkdfGetKlass:
+ *
+ * The HKDF key data klass.
+ *
+ * Returns: HKDF key data klass.
+ */
+xmlSecKeyDataId
+xmlSecGnuTLSKeyDataHkdfGetKlass(void) {
+    return(&xmlSecGnuTLSKeyDataHkdfKlass);
+}
+
+/**
+ * xmlSecGnuTLSKeyDataHkdfSet:
+ * @data:               the pointer to HKDF key data.
+ * @buf:                the pointer to key value.
+ * @bufSize:            the key value size (in bytes).
+ *
+ * Sets the value of HKDF key data.
+ *
+ * Returns: 0 on success or a negative value if an error occurs.
+ */
+int
+xmlSecGnuTLSKeyDataHkdfSet(xmlSecKeyDataPtr data, const xmlSecByte* buf, xmlSecSize bufSize) {
+    xmlSecBufferPtr buffer;
+
+    xmlSecAssert2(xmlSecKeyDataCheckId(data, xmlSecGnuTLSKeyDataHkdfId), -1);
+    xmlSecAssert2(buf != NULL, -1);
+    xmlSecAssert2(bufSize > 0, -1);
+
+    buffer = xmlSecKeyDataBinaryValueGetBuffer(data);
+    xmlSecAssert2(buffer != NULL, -1);
+
+    return(xmlSecBufferSetData(buffer, buf, bufSize));
+}
+
+#endif /* XMLSEC_NO_HKDF */

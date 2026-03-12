@@ -95,6 +95,14 @@ xmlSecCryptoGetFunctions_openssl(void) {
     gXmlSecOpenSSLFunctions->keyDataAesGetKlass         = xmlSecOpenSSLKeyDataAesGetKlass;
 #endif /* XMLSEC_NO_AES */
 
+#ifndef XMLSEC_NO_CAMELLIA
+    gXmlSecOpenSSLFunctions->keyDataCamelliaGetKlass    = xmlSecOpenSSLKeyDataCamelliaGetKlass;
+#endif /* XMLSEC_NO_CAMELLIA */
+
+#ifndef XMLSEC_NO_CHACHA20
+    gXmlSecOpenSSLFunctions->keyDataChaCha20GetKlass    = xmlSecOpenSSLKeyDataChaCha20GetKlass;
+#endif /* XMLSEC_NO_CHACHA20 */
+
 #ifndef XMLSEC_NO_CONCATKDF
     gXmlSecOpenSSLFunctions->keyDataConcatKdfGetKlass   = xmlSecOpenSSLKeyDataConcatKdfGetKlass;
 #endif /* XMLSEC_NO_CONCATKDF */
@@ -131,6 +139,10 @@ xmlSecCryptoGetFunctions_openssl(void) {
 #ifndef XMLSEC_NO_PBKDF2
     gXmlSecOpenSSLFunctions->keyDataPbkdf2GetKlass      = xmlSecOpenSSLKeyDataPbkdf2GetKlass;
 #endif /* XMLSEC_NO_PBKDF2 */
+
+#ifndef XMLSEC_NO_HKDF
+    gXmlSecOpenSSLFunctions->keyDataHkdfGetKlass        = xmlSecOpenSSLKeyDataHkdfGetKlass;
+#endif /* XMLSEC_NO_HKDF */
 
 #ifndef XMLSEC_NO_RSA
     gXmlSecOpenSSLFunctions->keyDataRsaGetKlass         = xmlSecOpenSSLKeyDataRsaGetKlass;
@@ -186,6 +198,26 @@ xmlSecCryptoGetFunctions_openssl(void) {
     gXmlSecOpenSSLFunctions->transformKWAes192GetKlass          = xmlSecOpenSSLTransformKWAes192GetKlass;
     gXmlSecOpenSSLFunctions->transformKWAes256GetKlass          = xmlSecOpenSSLTransformKWAes256GetKlass;
 #endif /* XMLSEC_NO_AES */
+
+
+    /******************************* CAMELLIA ********************************/
+#ifndef XMLSEC_NO_CAMELLIA
+    gXmlSecOpenSSLFunctions->transformCamellia128CbcGetKlass    = xmlSecOpenSSLTransformCamellia128CbcGetKlass;
+    gXmlSecOpenSSLFunctions->transformCamellia192CbcGetKlass    = xmlSecOpenSSLTransformCamellia192CbcGetKlass;
+    gXmlSecOpenSSLFunctions->transformCamellia256CbcGetKlass    = xmlSecOpenSSLTransformCamellia256CbcGetKlass;
+    gXmlSecOpenSSLFunctions->transformKWCamellia128GetKlass     = xmlSecOpenSSLTransformKWCamellia128GetKlass;
+    gXmlSecOpenSSLFunctions->transformKWCamellia192GetKlass     = xmlSecOpenSSLTransformKWCamellia192GetKlass;
+    gXmlSecOpenSSLFunctions->transformKWCamellia256GetKlass     = xmlSecOpenSSLTransformKWCamellia256GetKlass;
+#endif /* XMLSEC_NO_CAMELLIA */
+
+
+    /******************************* CHACHA20 ********************************/
+#ifndef XMLSEC_NO_CHACHA20
+#if !defined(XMLSEC_OPENSSL_API_100)
+    gXmlSecOpenSSLFunctions->transformChaCha20GetKlass          = xmlSecOpenSSLTransformChaCha20GetKlass;
+    gXmlSecOpenSSLFunctions->transformChaCha20Poly1305GetKlass  = xmlSecOpenSSLTransformChaCha20Poly1305GetKlass;
+#endif /* !defined(XMLSEC_OPENSSL_API_100) */
+#endif /* XMLSEC_NO_CHACHA20 */
 
 
     /******************************* CONCATKDF ********************************/
@@ -326,6 +358,11 @@ xmlSecCryptoGetFunctions_openssl(void) {
 #ifndef XMLSEC_NO_PBKDF2
     gXmlSecOpenSSLFunctions->transformPbkdf2GetKlass            = xmlSecOpenSSLTransformPbkdf2GetKlass;
 #endif /* XMLSEC_NO_PBKDF2 */
+
+    /******************************* HKDF ********************************/
+#ifndef XMLSEC_NO_HKDF
+    gXmlSecOpenSSLFunctions->transformHkdfGetKlass              = xmlSecOpenSSLTransformHkdfGetKlass;
+#endif /* XMLSEC_NO_HKDF */
 
     /******************************* RIPEMD160 ********************************/
 #ifndef XMLSEC_NO_RIPEMD160

@@ -29,17 +29,25 @@
  * XDH support requires public NSS KeyType values for Ed25519/X25519/X448.
  * In particular, ecMontKey used by xmlsec was added in NSS 3.103.
  */
-#if (NSS_VMAJOR < 3) || ((NSS_VMAJOR == 3) && (NSS_VMINOR < 59))
-#define XMLSEC_NO_RSA_OAEP 1
-#else  /* (NSS_VMAJOR < 3) || ((NSS_VMAJOR == 3) && (NSS_VMINOR < 59)) */
 #define XMLSEC_NO_MD5 1
-#endif /* (NSS_VMAJOR < 3) || ((NSS_VMAJOR == 3) && (NSS_VMINOR < 59)) */
 
 #ifndef XMLSEC_NO_XDH
 #if (NSS_VMAJOR < 3) || ((NSS_VMAJOR == 3) && (NSS_VMINOR < 103))
 #define XMLSEC_NO_XDH 1
 #endif /* (NSS_VMAJOR < 3) || ((NSS_VMAJOR == 3) && (NSS_VMINOR < 103)) */
 #endif /* XMLSEC_NO_XDH */
+
+#ifndef XMLSEC_NO_EDDSA
+#if (NSS_VMAJOR < 3) || ((NSS_VMAJOR == 3) && (NSS_VMINOR < 99))
+#define XMLSEC_NO_EDDSA 1
+#endif /* (NSS_VMAJOR < 3) || ((NSS_VMAJOR == 3) && (NSS_VMINOR < 99)) */
+#endif /* XMLSEC_NO_EDDSA */
+
+#ifndef XMLSEC_NO_HKDF
+#if !defined(CKM_HKDF_DERIVE) || !defined(CKM_HKDF_DATA) || !defined(CKF_HKDF_SALT_NULL) || !defined(CKF_HKDF_SALT_DATA)
+#define XMLSEC_NO_HKDF 1
+#endif /* !defined(CKM_HKDF_DERIVE) || !defined(CKM_HKDF_DATA) || !defined(CKF_HKDF_SALT_NULL) || !defined(CKF_HKDF_SALT_DATA) */
+#endif /* XMLSEC_NO_HKDF */
 
 #ifdef __cplusplus
 extern "C" {
@@ -170,6 +178,80 @@ XMLSEC_CRYPTO_EXPORT xmlSecTransformId  xmlSecNssTransformKWAes192GetKlass(void)
 XMLSEC_CRYPTO_EXPORT xmlSecTransformId  xmlSecNssTransformKWAes256GetKlass(void);
 
 #endif /* XMLSEC_NO_AES */
+
+/********************************************************************
+ *
+ * Camellia transforms
+ *
+ *******************************************************************/
+#ifndef XMLSEC_NO_CAMELLIA
+/**
+ * xmlSecNssKeyDataCamelliaId:
+ *
+ * The Camellia key data klass.
+ */
+#define xmlSecNssKeyDataCamelliaId \
+        xmlSecNssKeyDataCamelliaGetKlass()
+XMLSEC_CRYPTO_EXPORT xmlSecKeyDataId    xmlSecNssKeyDataCamelliaGetKlass(void);
+XMLSEC_CRYPTO_EXPORT int                xmlSecNssKeyDataCamelliaSet     (xmlSecKeyDataPtr data,
+                                                                         const xmlSecByte* buf,
+                                                                         xmlSecSize bufSize);
+
+/**
+ * xmlSecNssTransformCamellia128CbcId:
+ *
+ * The Camellia128 CBC cipher transform klass.
+ */
+#define xmlSecNssTransformCamellia128CbcId \
+        xmlSecNssTransformCamellia128CbcGetKlass()
+XMLSEC_CRYPTO_EXPORT xmlSecTransformId  xmlSecNssTransformCamellia128CbcGetKlass(void);
+
+/**
+ * xmlSecNssTransformCamellia192CbcId:
+ *
+ * The Camellia192 CBC cipher transform klass.
+ */
+#define xmlSecNssTransformCamellia192CbcId \
+        xmlSecNssTransformCamellia192CbcGetKlass()
+XMLSEC_CRYPTO_EXPORT xmlSecTransformId  xmlSecNssTransformCamellia192CbcGetKlass(void);
+
+/**
+ * xmlSecNssTransformCamellia256CbcId:
+ *
+ * The Camellia256 CBC cipher transform klass.
+ */
+#define xmlSecNssTransformCamellia256CbcId \
+        xmlSecNssTransformCamellia256CbcGetKlass()
+XMLSEC_CRYPTO_EXPORT xmlSecTransformId  xmlSecNssTransformCamellia256CbcGetKlass(void);
+
+/**
+ * xmlSecNssTransformKWCamellia128Id:
+ *
+ * The Camellia 128 key wrap transform klass.
+ */
+#define xmlSecNssTransformKWCamellia128Id \
+        xmlSecNssTransformKWCamellia128GetKlass()
+XMLSEC_CRYPTO_EXPORT xmlSecTransformId  xmlSecNssTransformKWCamellia128GetKlass(void);
+
+/**
+ * xmlSecNssTransformKWCamellia192Id:
+ *
+ * The Camellia 192 key wrap transform klass.
+ */
+#define xmlSecNssTransformKWCamellia192Id \
+        xmlSecNssTransformKWCamellia192GetKlass()
+XMLSEC_CRYPTO_EXPORT xmlSecTransformId  xmlSecNssTransformKWCamellia192GetKlass(void);
+
+/**
+ * xmlSecNssTransformKWCamellia256Id:
+ *
+ * The Camellia 256 key wrap transform klass.
+ */
+#define xmlSecNssTransformKWCamellia256Id \
+        xmlSecNssTransformKWCamellia256GetKlass()
+XMLSEC_CRYPTO_EXPORT xmlSecTransformId  xmlSecNssTransformKWCamellia256GetKlass(void);
+
+#endif /* XMLSEC_NO_CAMELLIA */
 
 /********************************************************************
  *
@@ -335,6 +417,31 @@ XMLSEC_CRYPTO_EXPORT xmlSecTransformId xmlSecNssTransformEcdsaSha512GetKlass(voi
 #endif /* XMLSEC_NO_SHA512 */
 
 #endif /* XMLSEC_NO_EC */
+
+/********************************************************************
+ *
+ * EdDSA keys and signatures
+ *
+ *******************************************************************/
+#ifndef XMLSEC_NO_EDDSA
+
+/**
+ * xmlSecNssKeyDataEdDSAId:
+ *
+ * The EdDSA key klass (Ed25519 and Ed448).
+ */
+#define xmlSecNssKeyDataEdDSAId \
+        xmlSecNssKeyDataEdDSAGetKlass()
+XMLSEC_CRYPTO_EXPORT xmlSecKeyDataId    xmlSecNssKeyDataEdDSAGetKlass(void);
+
+/**
+ * xmlSecNssTransformEdDSAEd25519Id:
+ *
+ * The EdDSA-Ed25519 signature transform klass.
+ */
+#define xmlSecNssTransformEdDSAEd25519Id    xmlSecNssTransformEdDSAEd25519GetKlass()
+XMLSEC_CRYPTO_EXPORT xmlSecTransformId xmlSecNssTransformEdDSAEd25519GetKlass(void);
+#endif /* XMLSEC_NO_EDDSA */
 
 
 /********************************************************************
@@ -519,6 +626,35 @@ XMLSEC_CRYPTO_EXPORT int                xmlSecNssKeyDataConcatKdfSet       (xmlS
 XMLSEC_CRYPTO_EXPORT xmlSecTransformId xmlSecNssTransformConcatKdfGetKlass(void);
 
 #endif /* XMLSEC_NO_CONCATKDF */
+
+/********************************************************************
+ *
+ * HKDF key and transform
+ *
+ *******************************************************************/
+#ifndef XMLSEC_NO_HKDF
+
+/**
+ * xmlSecNssKeyDataHkdfId:
+ *
+ * The HKDF key data klass.
+ */
+#define xmlSecNssKeyDataHkdfId \
+        xmlSecNssKeyDataHkdfGetKlass()
+XMLSEC_CRYPTO_EXPORT xmlSecKeyDataId    xmlSecNssKeyDataHkdfGetKlass      (void);
+XMLSEC_CRYPTO_EXPORT int                xmlSecNssKeyDataHkdfSet           (xmlSecKeyDataPtr data,
+                                                                            const xmlSecByte* buf,
+                                                                            xmlSecSize bufSize);
+/**
+ * xmlSecNssTransformHkdfId:
+ *
+ * The HKDF key derivation transform klass.
+ */
+#define xmlSecNssTransformHkdfId \
+        xmlSecNssTransformHkdfGetKlass()
+XMLSEC_CRYPTO_EXPORT xmlSecTransformId xmlSecNssTransformHkdfGetKlass(void);
+
+#endif /* XMLSEC_NO_HKDF */
 
 
 /********************************************************************

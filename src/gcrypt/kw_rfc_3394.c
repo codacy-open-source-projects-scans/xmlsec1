@@ -1,6 +1,7 @@
 /*
  * XML Security Library (http://www.aleksey.com/xmlsec).
  *
+ * AES/Camellia Key Transport (RFC 3394) implementation for GCrypt.
  *
  * This is free software; see the Copyright file in the source
  * distribution for precise wording.
@@ -28,7 +29,7 @@
 
 #include <xmlsec/gcrypt/crypto.h>
 
-#include "../kw_aes_des.h"
+#include "../kw_helpers.h"
 #include "../cast_helpers.h"
 
 /*********************************************************************
@@ -48,10 +49,10 @@ static int        xmlSecGCryptKWAesBlockDecrypt                 (xmlSecTransform
                                                                  xmlSecByte * out,
                                                                  xmlSecSize outSize,
                                                                  xmlSecSize * outWritten);
-static xmlSecKWAesKlass xmlSecGCryptKWAesKlass = {
+static xmlSecKWRfc3394Klass xmlSecGCryptKWAesKlass = {
     /* callbacks */
-    xmlSecGCryptKWAesBlockEncrypt,          /* xmlSecKWAesBlockEncryptMethod       encrypt; */
-    xmlSecGCryptKWAesBlockDecrypt,          /* xmlSecKWAesBlockDecryptMethod       decrypt; */
+    xmlSecGCryptKWAesBlockEncrypt,          /* xmlSecKWRfc3394BlockEncryptMethod       encrypt; */
+    xmlSecGCryptKWAesBlockDecrypt,          /* xmlSecKWRfc3394BlockDecryptMethod       decrypt; */
 
     /* for the future */
     NULL,                                   /* void*                               reserved0; */
@@ -67,7 +68,7 @@ static xmlSecKWAesKlass xmlSecGCryptKWAesKlass = {
 typedef struct _xmlSecGCryptKWAesCtx              xmlSecGCryptKWAesCtx,
                                                   *xmlSecGCryptKWAesCtxPtr;
 struct _xmlSecGCryptKWAesCtx {
-    xmlSecTransformKWAesCtx parentCtx;
+    xmlSecTransformKWRfc3394Ctx parentCtx;
 
     int                 cipher;
     int                 mode;
@@ -116,23 +117,23 @@ xmlSecGCryptKWAesInitialize(xmlSecTransformPtr transform) {
 
     if(xmlSecTransformCheckId(transform, xmlSecGCryptTransformKWAes128Id)) {
         ctx->cipher     = GCRY_CIPHER_AES128;
-        keyExpectedSize = XMLSEC_KW_AES128_KEY_SIZE;
+        keyExpectedSize = XMLSEC_KW_RFC3394_KEY_SIZE_128;
     } else if(xmlSecTransformCheckId(transform, xmlSecGCryptTransformKWAes192Id)) {
         ctx->cipher     = GCRY_CIPHER_AES192;
-        keyExpectedSize = XMLSEC_KW_AES192_KEY_SIZE;
+        keyExpectedSize = XMLSEC_KW_RFC3394_KEY_SIZE_192;
     } else if(xmlSecTransformCheckId(transform, xmlSecGCryptTransformKWAes256Id)) {
         ctx->cipher     = GCRY_CIPHER_AES256;
-        keyExpectedSize = XMLSEC_KW_AES256_KEY_SIZE;
+        keyExpectedSize = XMLSEC_KW_RFC3394_KEY_SIZE_256;
     } else {
         xmlSecInvalidTransfromError(transform)
         return(-1);
     }
 
-    ret = xmlSecTransformKWAesInitialize(transform, &(ctx->parentCtx),
+    ret = xmlSecTransformKWRfc3394Initialize(transform, &(ctx->parentCtx),
         &xmlSecGCryptKWAesKlass, xmlSecGCryptKeyDataAesId,
         keyExpectedSize);
     if(ret < 0) {
-        xmlSecInternalError("xmlSecTransformKWAesInitialize", xmlSecTransformGetName(transform));
+        xmlSecInternalError("xmlSecTransformKWRfc3394Initialize", xmlSecTransformGetName(transform));
         xmlSecGCryptKWAesFinalize(transform);
         return(-1);
     }
@@ -161,7 +162,7 @@ xmlSecGCryptKWAesFinalize(xmlSecTransformPtr transform) {
     ctx = xmlSecGCryptKWAesGetCtx(transform);
     xmlSecAssert(ctx != NULL);
 
-    xmlSecTransformKWAesFinalize(transform, &(ctx->parentCtx));
+    xmlSecTransformKWRfc3394Finalize(transform, &(ctx->parentCtx));
     memset(ctx, 0, sizeof(xmlSecGCryptKWAesCtx));
 }
 
@@ -176,9 +177,9 @@ xmlSecGCryptKWAesSetKeyReq(xmlSecTransformPtr transform,  xmlSecKeyReqPtr keyReq
     ctx = xmlSecGCryptKWAesGetCtx(transform);
     xmlSecAssert2(ctx != NULL, -1);
 
-    ret = xmlSecTransformKWAesSetKeyReq(transform, &(ctx->parentCtx),keyReq);
+    ret = xmlSecTransformKWRfc3394SetKeyReq(transform, &(ctx->parentCtx),keyReq);
     if(ret < 0) {
-        xmlSecInternalError("xmlSecTransformKWAesSetKeyReq", xmlSecTransformGetName(transform));
+        xmlSecInternalError("xmlSecTransformKWRfc3394SetKeyReq", xmlSecTransformGetName(transform));
         return(-1);
     }
     return(0);
@@ -194,9 +195,9 @@ xmlSecGCryptKWAesSetKey(xmlSecTransformPtr transform, xmlSecKeyPtr key) {
 
     ctx = xmlSecGCryptKWAesGetCtx(transform);
     xmlSecAssert2(ctx != NULL, -1);
-    ret = xmlSecTransformKWAesSetKey(transform, &(ctx->parentCtx), key);
+    ret = xmlSecTransformKWRfc3394SetKey(transform, &(ctx->parentCtx), key);
     if(ret < 0) {
-        xmlSecInternalError("xmlSecTransformKWAesSetKey", xmlSecTransformGetName(transform));
+        xmlSecInternalError("xmlSecTransformKWRfc3394SetKey", xmlSecTransformGetName(transform));
         return(-1);
     }
     return(0);
@@ -214,9 +215,9 @@ xmlSecGCryptKWAesExecute(xmlSecTransformPtr transform, int last,
 
     ctx = xmlSecGCryptKWAesGetCtx(transform);
     xmlSecAssert2(ctx != NULL, -1);
-    ret = xmlSecTransformKWAesExecute(transform, &(ctx->parentCtx), last);
+    ret = xmlSecTransformKWRfc3394Execute(transform, &(ctx->parentCtx), last);
     if(ret < 0) {
-        xmlSecInternalError("xmlSecTransformKWAesExecute", xmlSecTransformGetName(transform));
+        xmlSecInternalError("xmlSecTransformKWRfc3394Execute", xmlSecTransformGetName(transform));
         return(-1);
     }
 
@@ -347,7 +348,7 @@ xmlSecGCryptTransformKWAes256GetKlass(void) {
  * AES KW implementation
  *
  *********************************************************************/
-static unsigned char g_zero_iv[XMLSEC_KW_AES_BLOCK_SIZE] =
+static unsigned char g_zero_iv[XMLSEC_KW_RFC3394_BLOCK_SIZE] =
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 static int
 xmlSecGCryptKWAesBlockEncrypt(xmlSecTransformPtr transform, const xmlSecByte * in, xmlSecSize inSize,

@@ -432,6 +432,7 @@ typedef int                     (*xmlSecCryptoAppKeyCertLoadMemoryMethod)(xmlSec
  * @keyDataGost2001GetKlass:    the method to get pointer to GOST 2001 key data klass.
  * @keyDataGostR3410_2012_256GetKlass: the method to get pointer to GOST R 34.10-2012 256 bit key data klass.
  * @keyDataGostR3410_2012_512GetKlass: the method to get pointer to GOST R 34.10-2012 512 bit key data klass.
+ * @keyDataHkdfGetKlass:        the method to get pointer to HKDF key data klass.
  * @keyDataHmacGetKlass:        the method to get pointer to HMAC key data klass.
  * @keyDataMLDSAGetKlass:       the method to get pointer to ML-DSA key data klass.
  * @keyDataPbkdf2GetKlass:      the method to get pointer to PBKDF2 key data klass.
@@ -448,6 +449,8 @@ typedef int                     (*xmlSecCryptoAppKeyCertLoadMemoryMethod)(xmlSec
  * @transformAes128GcmGetKlass: the method to get pointer to AES 128 GCM encryption transform.
  * @transformAes192GcmGetKlass: the method to get pointer to AES 192 GCM encryption transform.
  * @transformAes256GcmGetKlass: the method to get pointer to AES 256 GCM encryption transform.
+ * @transformChaCha20GetKlass:  the method to get pointer to ChaCha20 stream cipher encryption transform.
+ * @transformChaCha20Poly1305GetKlass: the method to get pointer to ChaCha20-Poly1305 AEAD encryption transform.
  * @transformConcatKdfGetKlass: the method to get pointer to PBKDF2 KDF transform.
  * @transformKWAes128GetKlass:  the method to get pointer to AES 128 key wrapper transform.
  * @transformKWAes192GetKlass:  the method to get pointer to AES 192 key wrapper transform.
@@ -476,6 +479,7 @@ typedef int                     (*xmlSecCryptoAppKeyCertLoadMemoryMethod)(xmlSec
  * @transformGostR3411_94GetKlass: the method to get pointer to GOST R3411 transform.
  * @transformGostR3411_2012_256GetKlass: the method to get pointer to GOST R 34.11-2012 256 bit transform.
  * @transformGostR3411_2012_512GetKlass: the method to get pointer to GOST R 34.11-2012 512 bit transform.
+ * @transformHkdfGetKlass:      the method to get pointer to HKDF KDF transform.
  * @transformHmacMd5GetKlass:   the method to get pointer to HMAC-MD5 transform.
  * @transformHmacRipemd160GetKlass: the method to get pointer to HMAC-RIPEMD160 transform.
  * @transformHmacSha1GetKlass:  the method to get pointer to HMAC-SHA1 transform.
@@ -553,6 +557,8 @@ struct _xmlSecCryptoDLFunctions {
 
     /* Key data ids */
     xmlSecCryptoKeyDataGetKlassMethod            keyDataAesGetKlass;
+    xmlSecCryptoKeyDataGetKlassMethod            keyDataCamelliaGetKlass;
+    xmlSecCryptoKeyDataGetKlassMethod            keyDataChaCha20GetKlass;
     xmlSecCryptoKeyDataGetKlassMethod            keyDataConcatKdfGetKlass;
     xmlSecCryptoKeyDataGetKlassMethod            keyDataDesGetKlass;
     xmlSecCryptoKeyDataGetKlassMethod            keyDataDhGetKlass;
@@ -561,6 +567,7 @@ struct _xmlSecCryptoDLFunctions {
     xmlSecCryptoKeyDataGetKlassMethod            keyDataGost2001GetKlass;
     xmlSecCryptoKeyDataGetKlassMethod            keyDataGostR3410_2012_256GetKlass;
     xmlSecCryptoKeyDataGetKlassMethod            keyDataGostR3410_2012_512GetKlass;
+    xmlSecCryptoKeyDataGetKlassMethod            keyDataHkdfGetKlass;
     xmlSecCryptoKeyDataGetKlassMethod            keyDataHmacGetKlass;
     xmlSecCryptoKeyDataGetKlassMethod            keyDataMLDSAGetKlass;
     xmlSecCryptoKeyDataGetKlassMethod            keyDataPbkdf2GetKlass;
@@ -586,6 +593,17 @@ struct _xmlSecCryptoDLFunctions {
     xmlSecCryptoTransformGetKlassMethod          transformKWAes128GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformKWAes192GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformKWAes256GetKlass;
+
+    xmlSecCryptoTransformGetKlassMethod          transformCamellia128CbcGetKlass;
+    xmlSecCryptoTransformGetKlassMethod          transformCamellia192CbcGetKlass;
+    xmlSecCryptoTransformGetKlassMethod          transformCamellia256CbcGetKlass;
+
+    xmlSecCryptoTransformGetKlassMethod          transformKWCamellia128GetKlass;
+    xmlSecCryptoTransformGetKlassMethod          transformKWCamellia192GetKlass;
+    xmlSecCryptoTransformGetKlassMethod          transformKWCamellia256GetKlass;
+
+    xmlSecCryptoTransformGetKlassMethod          transformChaCha20GetKlass;
+    xmlSecCryptoTransformGetKlassMethod          transformChaCha20Poly1305GetKlass;
 
     xmlSecCryptoTransformGetKlassMethod          transformConcatKdfGetKlass;
 
@@ -621,6 +639,8 @@ struct _xmlSecCryptoDLFunctions {
     xmlSecCryptoTransformGetKlassMethod          transformGostR3411_2012_256GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformGostR3411_2012_512GetKlass;
 
+
+    xmlSecCryptoTransformGetKlassMethod          transformHkdfGetKlass;
 
     xmlSecCryptoTransformGetKlassMethod          transformHmacMd5GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformHmacRipemd160GetKlass;

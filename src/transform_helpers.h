@@ -163,31 +163,23 @@ XMLSEC_EXPORT int   xmlSecTransformHkdfParamsRead       (xmlSecTransformHkdfPara
 /********************************** ChaCha20 *******************************/
 #ifndef XMLSEC_NO_CHACHA20
 
-#define XMLSEC_CHACHA20_NONCE_SIZE      ((xmlSecSize)12)
-#define XMLSEC_CHACHA20_COUNTER_SIZE    ((xmlSecSize)4)
+#define XMLSEC_CHACHA20_NONCE_SIZE          ((xmlSecSize)12)
+#define XMLSEC_CHACHA20_COUNTER_SIZE        ((xmlSecSize)4)
+#define XMLSEC_CHACHA20_IV_SIZE             (XMLSEC_CHACHA20_NONCE_SIZE + XMLSEC_CHACHA20_COUNTER_SIZE)
+#define XMLSEC_CHACHA20_KEY_SIZE            ((xmlSecSize)32)
+#define XMLSEC_CHACHA20_POLY1305_TAG_SIZE   ((xmlSecSize)16)
 
-struct _xmlSecTransformChaCha20Params {
-    xmlSecByte nonce[XMLSEC_CHACHA20_NONCE_SIZE];
-    xmlSecByte counter[XMLSEC_CHACHA20_COUNTER_SIZE];
-};
-typedef struct _xmlSecTransformChaCha20Params   xmlSecTransformChaCha20Params,
-                                                *xmlSecTransformChaCha20ParamsPtr;
 
-XMLSEC_EXPORT int   xmlSecTransformChaCha20ParamsRead           (xmlSecTransformChaCha20ParamsPtr params,
-                                                                 xmlNodePtr node);
+XMLSEC_EXPORT int   xmlSecTransformChaCha20ParamsRead               (xmlNodePtr node,
+                                                                     xmlSecByte *iv,
+                                                                     xmlSecSize ivSize,
+                                                                     xmlSecSize *ivSizeOut);
 
-struct _xmlSecTransformChaCha20Poly1305Params {
-    xmlSecByte      nonce[XMLSEC_CHACHA20_NONCE_SIZE];
-    xmlSecBuffer    aad;
-};
-typedef struct _xmlSecTransformChaCha20Poly1305Params   xmlSecTransformChaCha20Poly1305Params,
-                                                        *xmlSecTransformChaCha20Poly1305ParamsPtr;
-
-XMLSEC_EXPORT int   xmlSecTransformChaCha20Poly1305ParamsInitialize (xmlSecTransformChaCha20Poly1305ParamsPtr params);
-XMLSEC_EXPORT void  xmlSecTransformChaCha20Poly1305ParamsFinalize   (xmlSecTransformChaCha20Poly1305ParamsPtr params);
-XMLSEC_EXPORT int   xmlSecTransformChaCha20Poly1305ParamsRead       (xmlSecTransformChaCha20Poly1305ParamsPtr params,
-                                                                     xmlNodePtr node);
-
+XMLSEC_EXPORT int   xmlSecTransformChaCha20Poly1305ParamsRead       (xmlNodePtr node,
+                                                                     xmlSecBufferPtr aad,
+                                                                     xmlSecByte *iv,
+                                                                     xmlSecSize ivSize,
+                                                                     xmlSecSize *ivSizeOut);
 #endif /* XMLSEC_NO_CHACHA20 */
 
 

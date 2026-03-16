@@ -151,9 +151,13 @@ mkdir dsa
 
 ### Generate and sign RSA keys with second level CA
 
+Note: CRL need to be regenerated a few days later. This is needed for a test where certificates
+are already valid by time but CRL is not yet.
+
 ```
 mkdir rsa
 ./scripts/create-rsa-2048.sh
+./scripts/create-rsa-2048-crl.sh
 ./scripts/create-rsa-4096.sh
 ./scripts/create-rsa-expired.sh
 ```
@@ -229,7 +233,9 @@ mkdir ec
 ./scripts/create-ec-prime256v1.sh
 ./scripts/create-ec-prime256v1-second.sh
 ./scripts/create-ec-prime384v1.sh
+./scripts/create-ec-prime384v1-second.sh
 ./scripts/create-ec-prime521v1.sh
+./scripts/create-ec-prime521v1-second.sh
 ```
 
 ### Generate and sign DHX keys with second level CA

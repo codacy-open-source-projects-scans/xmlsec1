@@ -25,6 +25,166 @@ echo "--- testEnc started for xmlsec-$crypto library ($timestamp)" >> $logfile
 echo "--- LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $logfile
 echo "--- LTDL_LIBRARY_PATH=$LTDL_LIBRARY_PATH" >> $logfile
 
+
+##########################################################################
+##########################################################################
+##########################################################################
+#
+# Enc test function
+#
+execEncTest() {
+    execEncTestWithCryptoConfig "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" ""
+}
+
+execEncTestWithCryptoConfig() {
+    expected_res="$1"
+    folder="$2"
+    filename="$3"
+    req_transforms="$4"
+    req_key_data="$5"
+    params1="$6"
+    params2="$7"
+    params3="$8"
+    outputTransform="$9"
+    crypto_config="${10}"
+    failures=0
+
+    if [ -n "$XMLSEC_TEST_NAME" -a "$XMLSEC_TEST_NAME" != "$filename" ]; then
+        return
+    fi
+
+    # prepare
+    setupTest
+
+    # check params
+    if [ "z$expected_res" != "z$res_success" -a "z$expected_res" != "z$res_fail" ] ; then
+        echo " Bad parameter: expected_res=$expected_res"
+        tearDownTest
+        return
+    fi
+    if [ "z$crypto_config" = "z" ] ; then
+        crypto_config="$default_crypto_config"
+    fi
+
+    # starting test
+    if [ -n "$folder" ] ; then
+        cd $topfolder/$folder
+        full_file=$filename
+        echo "Test: $folder/$filename $extra_message"
+        echo "Test: $folder/$filename in folder " `pwd` " $extra_message -- $expected_res" > $curlogfile
+    else
+        full_file=$topfolder/$filename
+        echo "Test: $filename $extra_message"
+        echo "Test: $folder/$filename $extra_message -- $expected_res" > $curlogfile
+    fi
+    extra_message=""
+
+    # check transforms
+    if [ -n "$req_transforms" ] ; then
+        printf "    Checking required transforms                         "
+        echo "$extra_vars $xmlsec_app check-transforms $xmlsec_params  --crypto-config $crypto_config $req_transforms" >> $curlogfile
+        $xmlsec_app check-transforms $xmlsec_params  --crypto-config $crypto_config $req_transforms >> $curlogfile 2>> $curlogfile
+        printCheckStatus $?
+        res=$?
+        if [ $res -ne 0 ]; then
+	        cat $curlogfile >> $logfile
+	        tearDownTest
+            return
+        fi
+    fi
+
+    # check key data
+    if [ -n "$req_key_data" ] ; then
+        printf "    Checking required key data                           "
+        echo "$extra_vars $xmlsec_app check-key-data $xmlsec_params --crypto-config $crypto_config $req_key_data" >> $curlogfile
+        $xmlsec_app check-key-data $xmlsec_params --crypto-config $crypto_config $req_key_data >> $curlogfile 2>> $curlogfile
+        printCheckStatus $?
+        res=$?
+        if [ $res -ne 0 ]; then
+            cat $curlogfile >> $logfile
+	        tearDownTest
+            return
+        fi
+    fi
+
+    # run tests
+    xml_verification_failed="no"
+    if [ -n "$params1" ] ; then
+        rm -f $tmpfile
+        printf "    Decrypt existing document                            "
+        echo "$extra_vars $VALGRIND $xmlsec_app decrypt $xmlsec_params --crypto-config $crypto_config $params1 $full_file.xml" >>  $curlogfile
+        $VALGRIND $xmlsec_app decrypt $xmlsec_params --crypto-config $crypto_config $params1 --output $tmpfile $full_file.xml >> $curlogfile  2>> $curlogfile
+        res=$?
+        echo "=== TEST RESULT: $res; expected: $expected_res" >> $curlogfile
+        if [ $res -eq 0 -a "$expected_res" = "$res_success" ]; then
+            if [ "z$outputTransform" != "z" ] ; then
+                cat $tmpfile | $outputTransform > $tmpfile.2
+                mv $tmpfile.2 $tmpfile
+            fi
+            diff $diff_param $full_file.data $tmpfile >> $curlogfile 2>> $curlogfile
+            printRes $expected_res $?
+        else
+            printRes $expected_res $res
+        fi
+    	if [ $? -ne 0 ]; then
+            xml_verification_failed="yes"
+            failures=`expr $failures + 1`
+    	fi
+    fi
+
+    if [ -n "$params2" -a -z "$PERF_TEST" ] ; then
+        rm -f $tmpfile
+        printf "    Encrypt document                                     "
+        echo "$extra_vars $VALGRIND $xmlsec_app encrypt $xmlsec_params --crypto-config $crypto_config $params2 --output $tmpfile $full_file.tmpl" >>  $curlogfile
+        $VALGRIND $xmlsec_app encrypt $xmlsec_params --crypto-config $crypto_config $params2 --output $tmpfile $full_file.tmpl >> $curlogfile 2>> $curlogfile
+        printRes $res_success $?
+        if [ $? -ne 0 ]; then
+            failures=`expr $failures + 1`
+        fi
+    fi
+
+    # update existing decryption failed
+    if [  "z$XMLSEC_TEST_UPDATE_XML_ON_FAILURE" = "zyes" -a "z$xml_verification_failed" = "zyes" ] ; then
+        printf "    Update existing enc document                         "
+        echo "cp $tmpfile $full_file.xml" >> $curlogfile 2>> $curlogfile
+        cp $tmpfile $full_file.xml
+        printRes $res_success $?
+        if [ $? -ne  0 ]; then
+            failures=`expr $failures + 1`
+        fi
+    fi
+
+    if [ -n "$params3" -a -z "$PERF_TEST" ] ; then
+        rm -f $tmpfile.2
+        printf "    Decrypt new document                                 "
+        echo "$extra_vars $VALGRIND $xmlsec_app decrypt $xmlsec_params --crypto-config $crypto_config $params3 --output $tmpfile.2 $tmpfile" >>  $curlogfile
+        $VALGRIND $xmlsec_app decrypt $xmlsec_params --crypto-config $crypto_config $params3 --output $tmpfile.2 $tmpfile >> $curlogfile 2>> $curlogfile
+        res=$?
+        if [ $res -eq 0 ]; then
+            if [ "z$outputTransform" != "z" ] ; then
+                cat $tmpfile.2 | $outputTransform > $tmpfile
+                mv $tmpfile $tmpfile.2
+            fi
+            diff $diff_param $full_file.data $tmpfile.2 >> $curlogfile 2>> $curlogfile
+            printRes $res_success $?
+        else
+            printRes $res_success $res
+        fi
+        if [ $? -ne 0 ]; then
+            failures=`expr $failures + 1`
+        fi
+    fi
+
+    # save logs
+    cat $curlogfile >> $logfile
+    if [ $failures -ne 0 ] ; then
+        cat $curlogfile >> $failedlogfile
+    fi
+
+    # cleanup
+    tearDownTest
+}
+
 ##########################################################################
 ##########################################################################
 ##########################################################################
@@ -269,9 +429,9 @@ execEncTest $res_success \
     "xmlenc11-interop-2012/cipherText__DH-1024__aes128-gcm__kw-aes128__dh-es__ConcatKDF" \
     "aes128-gcm kw-aes128 concatkdf dh-es sha256" \
     "agreement-method enc-key dh" \
-    "--enabled-key-data agreement-method,enc-key,key-value,key-name,dh $priv_key_option:DH-1024 $topfolder/xmlenc11-interop-2012/DH-1024_SHA256WithDSA.$priv_key_format --pwd passwd" \
-    "--enabled-key-data agreement-method,enc-key,key-value,key-name,dh --session-key aes-128 --privkey-pem:dhx-rfc5114-3-first $topfolder/keys/dhx/dhx-rfc5114-3-first-key.pem --pubkey-pem:dhx-rfc5114-3-second $topfolder/keys/dhx/dhx-rfc5114-3-second-pubkey.pem --xml-data $topfolder/xmlenc11-interop-2012/cipherText__DH-1024__aes128-gcm__kw-aes128__dh-es__ConcatKDF.data" \
-    "--enabled-key-data agreement-method,enc-key,key-value,key-name,dh --privkey-pem:dhx-rfc5114-3-second $topfolder/keys/dhx/dhx-rfc5114-3-second-key.pem"
+    "--enabled-key-data agreement-method,enc-key,key-value,key-name,dh $dh_interop_priv_key_option:DH-1024 $topfolder/xmlenc11-interop-2012/DH-1024_SHA256WithDSA.$dh_interop_priv_key_format --pwd passwd" \
+    "--enabled-key-data agreement-method,enc-key,key-value,key-name,dh --session-key aes-128 --privkey-der:dhx-rfc5114-3-first $topfolder/keys/dhx/dhx-rfc5114-3-first-key.der --pubkey-der:dhx-rfc5114-3-second $topfolder/keys/dhx/dhx-rfc5114-3-second-pubkey.der --pwd secret123 --xml-data $topfolder/xmlenc11-interop-2012/cipherText__DH-1024__aes128-gcm__kw-aes128__dh-es__ConcatKDF.data" \
+    "--enabled-key-data agreement-method,enc-key,key-value,key-name,dh --privkey-der:dhx-rfc5114-3-second $topfolder/keys/dhx/dhx-rfc5114-3-second-key.der --pwd secret123"
 
 
 
@@ -390,9 +550,9 @@ execEncTest $res_success \
     "aleksey-xmlenc-01/enc_dh_concatkdf_sha256_kw_aes128_aes128gcm" \
     "aes128-gcm kw-aes128 concatkdf dh-es sha256" \
     "agreement-method enc-key dh" \
-    "--enabled-key-data agreement-method,enc-key,key-value,key-name,dh --privkey-pem:dhx-rfc5114-3-second $topfolder/keys/dhx/dhx-rfc5114-3-second-key.pem" \
-    "--enabled-key-data agreement-method,enc-key,key-value,key-name,dh --session-key aes-128 --privkey-pem:dhx-rfc5114-3-first $topfolder/keys/dhx/dhx-rfc5114-3-first-key.pem --pubkey-pem:dhx-rfc5114-3-second $topfolder/keys/dhx/dhx-rfc5114-3-second-pubkey.pem --xml-data $topfolder/aleksey-xmlenc-01/enc_dh_concatkdf_sha256_kw_aes128_aes128gcm.data" \
-    "--enabled-key-data agreement-method,enc-key,key-value,key-name,dh --privkey-pem:dhx-rfc5114-3-second $topfolder/keys/dhx/dhx-rfc5114-3-second-key.pem"
+    "--enabled-key-data agreement-method,enc-key,key-value,key-name,dh $dhx_priv_key_option:dhx-rfc5114-3-second $topfolder/keys/dhx/dhx-rfc5114-3-second-key.$dhx_priv_key_format" \
+    "--enabled-key-data agreement-method,enc-key,key-value,key-name,dh --session-key aes-128 $dhx_priv_key_option:dhx-rfc5114-3-first $topfolder/keys/dhx/dhx-rfc5114-3-first-key.$dhx_priv_key_format $dhx_pub_key_option:dhx-rfc5114-3-second $topfolder/keys/dhx/dhx-rfc5114-3-second-pubkey.$dhx_pub_key_format --xml-data $topfolder/aleksey-xmlenc-01/enc_dh_concatkdf_sha256_kw_aes128_aes128gcm.data" \
+    "--enabled-key-data agreement-method,enc-key,key-value,key-name,dh $dhx_priv_key_option:dhx-rfc5114-3-second $topfolder/keys/dhx/dhx-rfc5114-3-second-key.$dhx_priv_key_format"
 
 # ECDH + PBKDF2+SHA1
 execEncTest $res_success \

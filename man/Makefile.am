@@ -19,43 +19,38 @@ EXTRA_DIST = \
 XMLSEC_PROGRAM=$(top_builddir)/apps/xmlsec1
 XMLSEC_CONFIG_PROGRAM=$(top_builddir)/xmlsec1-config
 
-all: $(man_MANS) $(XMLSEC_HTML)
+all: $(man_MANS)
 
-
-if BUILD_MANPAGES
 $(XMLSEC1_MAN): $(XMLSEC_PROGRAM)
-	$(HELP2MAN) --help-option=--help-all --no-info \
-		  --name="sign, verify, encrypt and decrypt XML documents" \
-		  --version-option=--version \
-		  --output=$(XMLSEC1_MAN) \
-		  $(XMLSEC_PROGRAM)
-else
-$(XMLSEC1_MAN):
-	@( \
+	@if test "z$(HELP2MAN)" = "z" ; then \
 		echo "Copying xmlsec1 manpage ..."; \
 		if [ z"$(XMLSEC1_MAN_SRC)" != z"$(XMLSEC1_MAN)" ]; \
 		then \
-		   $(CP) -u $(XMLSEC1_MAN_SRC) $(XMLSEC1_MAN) ; \
-		fi \
-	)
-endif
+		   $(CP) $(XMLSEC1_MAN_SRC) $(XMLSEC1_MAN) ; \
+		fi ; \
+	else \
+		echo "Building xmlsec1 manpage ..."; \
+		$(HELP2MAN) --help-option=--help-all --no-info \
+		  --name="sign, verify, encrypt and decrypt XML documents" \
+		  --version-option=--version \
+		  --output=$(XMLSEC1_MAN) \
+		  $(XMLSEC_PROGRAM) ; \
+	fi
 
-if BUILD_MANPAGES
 $(XMLSEC1_CONFIG_MAN): $(XMLSEC_CONFIG_PROGRAM)
-	$(HELP2MAN) --help-option=--help --no-info \
+	@if test "z$(HELP2MAN)" = "z" ; then \
+		echo "Copying xmlsec1-config manpage ..."; \
+		if [ z"$(XMLSEC1_CONFIG_MAN_SRC)" != z"$(XMLSEC1_CONFIG_MAN)" ]; then \
+		    $(CP) $(XMLSEC1_CONFIG_MAN_SRC) $(XMLSEC1_CONFIG_MAN) ; \
+		fi ; \
+	else \
+		echo "Building xmlsec1-config manpage ..."; \
+		$(HELP2MAN) --help-option=--help --no-info \
 		  --name="detail installed version of xmlsec library" \
 		  --version-option=--version \
 		  --output=$(XMLSEC1_CONFIG_MAN) \
-		  $(XMLSEC_CONFIG_PROGRAM)
-else
-$(XMLSEC1_CONFIG_MAN):
-	@( \
-		echo "Copying xmlsec1-config manpage ..."; \
-		if [ z"$(XMLSEC1_CONFIG_MAN_SRC)" != z"$(XMLSEC1_CONFIG_MAN)" ]; then \
-		    $(CP) -u $(XMLSEC1_CONFIG_MAN_SRC) $(XMLSEC1_CONFIG_MAN) ; \
-		fi \
-	)
-endif
+		  $(XMLSEC_CONFIG_PROGRAM) ; \
+	fi
 
 $(XMLSEC_PROGRAM):
 	@cd ../apps;make
@@ -64,11 +59,11 @@ $(XMLSEC_CONFIG_PROGRAM):
 
 
 clean-local:
-	( if [ z"$(XMLSEC1_MAN_SRC)" != z"$(XMLSEC1_MAN)" ]; then \
-		rm -rf $(XMLSEC1_MAN) ; \
+	@( if [ z"$(XMLSEC1_MAN_SRC)" != z"$(XMLSEC1_MAN)" ]; then \
+		$(RM) -rf $(XMLSEC1_MAN) ; \
 	fi )
-	( if [ z"$(XMLSEC1_CONFIG_MAN_SRC)" != z"$(XMLSEC1_CONFIG_MAN)" ];  then \
-		rm -rf $(XMLSEC1_CONFIG_MAN) ; \
+	@( if [ z"$(XMLSEC1_CONFIG_MAN_SRC)" != z"$(XMLSEC1_CONFIG_MAN)" ];  then \
+		$(RM) -rf $(XMLSEC1_CONFIG_MAN) ; \
 	fi )
 
 distclean-local: clean-local

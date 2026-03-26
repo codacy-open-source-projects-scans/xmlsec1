@@ -1,13 +1,28 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT([xmlsec1],[1.3.10],[http://www.aleksey.com/xmlsec])
 
-XMLSEC_PACKAGE=xmlsec1
-XMLSEC_VERSION_MAJOR=1
-XMLSEC_VERSION_MINOR=3
-XMLSEC_VERSION_SUBMINOR=10
-XMLSEC_VERSION="$XMLSEC_VERSION_MAJOR.$XMLSEC_VERSION_MINOR.$XMLSEC_VERSION_SUBMINOR"
-XMLSEC_VERSION_INFO=`echo $XMLSEC_VERSION | awk -F. '{ printf "%d:%d:%d", $1+$2, $3, $2 }'`
-XMLSEC_VERSION_SAFE=`echo $XMLSEC_VERSION | sed 's/\./_/g'`
+dnl Get package and version information from AC_INIT()
+XMLSEC_PACKAGE="$PACKAGE_NAME"
+XMLSEC_VERSION_MAJOR=$(echo $PACKAGE_VERSION | cut -d. -f1)
+XMLSEC_VERSION_MINOR=$(echo $PACKAGE_VERSION | cut -d. -f2)
+XMLSEC_VERSION_SUBMINOR=$(echo $PACKAGE_VERSION | cut -d. -f3)
+XMLSEC_VERSION="$PACKAGE_VERSION"
+XMLSEC_VERSION_SAFE="${XMLSEC_VERSION_MAJOR}_${XMLSEC_VERSION_MINOR}_${XMLSEC_VERSION_SUBMINOR}"
+
+# https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+# format: current[:revision[:age]]
+# * If the library source code has changed at all since the last update, then increment
+#   revision (‘c:r:a’ becomes ‘c:r+1:a’).
+# * If any interfaces have been added, removed, or changed since the last update, increment
+#   current, and set revision to 0.
+# * If any interfaces have been added since the last public release, then increment age.
+# * If any interfaces have been removed or changed since the last public release, then
+#   set age to 0.
+#
+# For simplicity we just bump current all the time and don't bother
+#
+XMLSEC_VERSION_CURRENT=$((10000 * XMLSEC_VERSION_MAJOR + 100 * XMLSEC_VERSION_MINOR + XMLSEC_VERSION_SUBMINOR))
+XMLSEC_VERSION_INFO="${XMLSEC_VERSION_CURRENT}:0:0"
 
 AC_PREREQ([2.69])
 AC_LANG(C)
@@ -24,7 +39,6 @@ AC_SUBST(XMLSEC_VERSION_INFO)
 AC_CONFIG_MACRO_DIR(m4)
 AM_INIT_AUTOMAKE([1.7 tar-ustar subdir-objects -Wno-portability foreign])
 AC_CONFIG_HEADERS([config.h])
-AM_MAINTAINER_MODE
 
 # Support silent build rules, requires at least automake-1.11. Disable
 # by either passing --disable-silent-rules to configure or passing V=1
@@ -41,18 +55,20 @@ LT_INIT
 AC_PROG_EGREP
 
 
-LT_INIT
-
 dnl
 dnl Find programs
 dnl
 if test "z$RM" = "z" ; then
     AC_PATH_PROG(RM, rm, /bin/rm)
 fi
-AC_PATH_PROG(CP, cp, /bin/cp)
-AC_PATH_PROG(MV, mv, /bin/mv)
-AC_PATH_PROG(TAR, tar, /bin/tar)
-AC_PATH_PROG(PERL, perl)
+AC_PATH_PROG(CP,   cp,   /bin/cp)
+AC_PATH_PROG(GREP, grep, /bin/grep)
+AC_PATH_PROG(MV,   mv,   /bin/mv)
+AC_PATH_PROG(RM,   rm,   /bin/rm)
+AC_PATH_PROG(SED,  sed,  /bin/sed)
+AC_PATH_PROG(SORT, sort, /bin/sort)
+AC_PATH_PROG(TAR,  tar,  /bin/tar)
+
 
 dnl Programs for man pages and HTML docs
 AC_PATH_PROG(HELP2MAN, help2man)
@@ -61,9 +77,8 @@ AC_PATH_PROG(MAN2HTML, man2html)
 AC_PATH_PROG(GTKDOC_MKHTML, gtkdoc-mkhtml)
 AC_PATH_PROG(GTKDOC_MKDB,   gtkdoc-mkdb)
 AC_PATH_PROG(GTKDOC_SCAN,   gtkdoc-scan)
-AM_CONDITIONAL(HAS_HELP2MAN, [test x"$HELP2MAN" != x])
-AM_CONDITIONAL(HAS_MAN2HTML, [test x"$MAN2HTML" != x])
-AM_CONDITIONAL(HAS_XSLTPROC, [test x"$XSLTPROC" != x])
+AM_CONDITIONAL(BUILD_MAN_DOCS, [test x"$XSLTPROC" != x && test x"$MAN2HTML" != x])
+AM_CONDITIONAL(BUILD_API_DOCS, [test x"$SED" != x && test x"$SORT" != x && test x"$XSLTPROC" != x && test x"$GTKDOC_MKHTML" != x && test x"$GTKDOC_MKDB" != x && test x"$GTKDOC_SCAN" != x])
 
 dnl Checks for header files.
 AC_HEADER_DIRENT
@@ -84,7 +99,7 @@ build_with_gcc=no
 build_with_clang=no
 AC_MSG_CHECKING(for '$CC' compiler type)
 
-cc_ver=`$CC -v 2>&1 | grep -i version`
+cc_ver=`$CC -v 2>&1 | $GREP -i version`
 case "${cc_ver}" in
   *gcc*|*GCC* )
     build_with_gcc=yes
@@ -179,8 +194,6 @@ if test "z$enable_development" = "zyes" ; then
     enable_debugging="yes"
     enable_pedantic="yes"
     enable_static_linking="yes"
-    enable_manpages_build="no"
-    enable_docs_build="no"
     enable_crypto_dl="no"
     enable_legacy_features="yes"
     AC_MSG_RESULT([yes])
@@ -217,34 +230,6 @@ if test "z$enable_experimental_features" = "zyes" ; then
     AC_MSG_RESULT([yes])
 else
     AC_MSG_RESULT([no])
-fi
-
-dnl ==========================================================================
-dnl Do we want to build manpages?
-dnl ==========================================================================
-AC_MSG_CHECKING(for man pages build)
-AC_ARG_ENABLE([manpages_build], [AS_HELP_STRING([--enable-manpages-build],[man pages build (no)])])
-if test "z$enable_manpages_build" = "zyes" ; then
-    AM_CONDITIONAL(BUILD_MANPAGES, [test x"$HELP2MAN" != x])
-    AC_MSG_RESULT([yes])
-else
-    AM_CONDITIONAL(BUILD_MANPAGES, [test "x" = "y"])
-    AC_MSG_RESULT([disabled])
-fi
-
-dnl ==========================================================================
-dnl Do we want to build docs?
-dnl ==========================================================================
-AC_MSG_CHECKING(for docs build)
-AC_ARG_ENABLE([docs_build], [AS_HELP_STRING([--enable-docs-build],[docs build (no)])])
-if test "z$enable_docs_build" = "zyes" ; then
-    AM_CONDITIONAL(BUILD_MAN_DOCS, [test x"$PERL" != x && test x"$XSLTPROC" != x && test x"$MAN2HTML" != x])
-    AM_CONDITIONAL(BUILD_API_DOCS, [test x"$PERL" != x && test x"$XSLTPROC" != x && test x"$GTKDOC_MKHTML" != x && test x"$GTKDOC_MKDB" != x && test x"$GTKDOC_SCAN" != x])
-    AC_MSG_RESULT([yes])
-else
-    AM_CONDITIONAL(BUILD_MAN_DOCS, [test "x" = "y"])
-    AM_CONDITIONAL(BUILD_API_DOCS, [test "x" = "y"])
-    AC_MSG_RESULT([disabled])
 fi
 
 dnl ==========================================================================
@@ -2827,7 +2812,7 @@ fi
 
 
 if test "z$XMLSEC_NO_CRYPTO_DYNAMIC_LOADING" = "z1" ; then
-(rm -f xmlsec1.pc && $LN_S xmlsec1-$XMLSEC_DEFAULT_CRYPTO.pc xmlsec1.pc)
+($RM -f xmlsec1.pc && $LN_S xmlsec1-$XMLSEC_DEFAULT_CRYPTO.pc xmlsec1.pc)
 else
 AC_CONFIG_FILES([xmlsec1.pc:xmlsec.pc.in])
 fi

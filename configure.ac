@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.69])
-AC_INIT([xmlsec1],[1.3.10],[http://www.aleksey.com/xmlsec])
+AC_INIT([xmlsec1],[1.3.11],[http://www.aleksey.com/xmlsec])
 AM_INIT_AUTOMAKE([1.7 tar-ustar subdir-objects -Wno-portability foreign])
 
 dnl Get package and version information from AC_INIT()
@@ -2825,6 +2825,7 @@ src/Makefile
 apps/Makefile
 docs/Makefile
 docs/api/Makefile
+docs/tutorial/Makefile
 man/Makefile
 xmlsec1-openssl.pc:xmlsec-openssl.pc.in
 xmlsec1-gnutls.pc:xmlsec-gnutls.pc.in
